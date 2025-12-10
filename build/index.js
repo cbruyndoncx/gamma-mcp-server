@@ -4,20 +4,24 @@ import { z } from "zod";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 dotenv.config();
-const GAMMA_API_URL = "https://api.gamma.app/generations";
+const GAMMA_API_URL = "https://public-api.gamma.app/v1.0/generations";
 const GAMMA_API_KEY = process.env.GAMMA_API_KEY;
 // Helper function for making Gamma API requests
 async function generatePresentation(params) {
     try {
+        // Build request body with supported fields (pass-through but allow exportAs)
+        const body = { ...params };
+        if (params.exportAs)
+            body.exportAs = params.exportAs; // "pdf" or "pptx"
         // Initial create request
         const response = await fetch(GAMMA_API_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "Authorization": `Bearer ${GAMMA_API_KEY || ""}`,
+                "X-API-KEY": GAMMA_API_KEY || "",
             },
-            body: JSON.stringify(params),
+            body: JSON.stringify(body),
         });
         if (!response.ok) {
             const errorText = await response.text();
