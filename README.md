@@ -93,7 +93,7 @@ You might want to adjust the `tsconfig.json` to suit your preferences, but the d
         ```
         Replace `"your_actual_gamma_api_key_here"` with your actual key.
 
-    **IMPORTANT:** The `.env` file is included in the project's `.gitignore` file, so it **WILL NOT** be committed to your Git repository. This is crucial for keeping your API key secret. Do not remove `.env` from `.gitignore` or commit your API key directly into your codebase.
+        **IMPORTANT:** The `.env` file is included in the project's `.gitignore` file, so it **WILL NOT** be committed to your Git repository. This is crucial for keeping your API key secret. Do not remove `.env` from `.gitignore` or commit your API key directly into your codebase.
 
     If the `GAMMA_API_KEY` is not found in the environment (e.g., if the `.env` file is missing or the key isn't set), the server will log a fatal error and exit upon starting.
 
@@ -181,6 +181,94 @@ Let's break down the key parts of the `src/index.ts` file:
     ```
 
     This function sets up the server to communicate over standard input/output (stdio) and starts it.
+
+## Gamma generate-presentation: Exact Parameters
+
+This MCP server exposes a Gamma presentation generator tool. Below are the exact parameters accepted by the generator (these mirror the Zod schema used by the tool). Use these parameters when calling the tool from an MCP client.
+
+- inputText (string) — REQUIRED
+  - Description: The main prompt, topic, or instructions for the presentation. Include goal, audience, and structure for best results.
+  - Example: "Quarterly marketing review: results, insights, next priorities."
+
+- numCards (number) — optional, integer (min: 1, max: 20)
+  - Description: Number of slides/cards to generate.
+  - Example: 8
+
+- textAmount (string) — optional; allowed values: "short" | "medium" | "long"
+  - Description: Controls the verbosity of slide copy.
+  - Example: "medium"
+
+- textMode (string) — optional; allowed values: "generate" | "summarize"
+  - Description: "generate" to produce new slide text; "summarize" to condense provided input text into slides.
+  - Example: "generate"
+
+- audience (string) — optional
+  - Description: Target audience (e.g., "executive leadership", "students").
+  - Example: "VPs and directors"
+
+- tone (string) — optional
+  - Description: Tone/style of writing (e.g., "professional", "casual", "humorous").
+  - Example: "concise and professional"
+
+- imageStyle (string) — optional
+  - Description: Desired image style (free-text). Examples: "photo-realistic", "line drawings", "flat icons".
+  - Example: "photo-realistic"
+
+- imageModel (string) — optional
+  - Description: Image generation model choice (if applicable). Free-text (e.g., "dall-e-3").
+  - Example: "dall-e-3"
+
+- editorMode (string) — optional
+  - Description: Editor mode hint (e.g., "freeform").
+  - Example: "freeform"
+
+- additionalInstructions (string) — optional
+  - Description: Any extra directions: slide order, branding, speaker notes, data/CSV usage, template specifics.
+  - Example: "Include title slide, agenda, KPIs with charts, top 3 wins, challenges, and a 3-point action plan. Add speaker notes."
+
+Notes and constraints
+
+- Max slides per request: typically 20 (numCards). If you need more, generate multiple decks or iterate.
+- Keep inputText focused: include goal, audience, structure, and whether you want speaker notes.
+- textAmount controls verbosity — use "short" for visual-heavy decks.
+- imageStyle and imageModel are free-form strings; include examples if you require a specific look.
+
+Example JSON payload (generate)
+
+```json
+{
+  "inputText": "Investor update: product milestones, ARR growth, top 3 risks and mitigations, asks",
+  "numCards": 8,
+  "textAmount": "medium",
+  "textMode": "generate",
+  "audience": "investors",
+  "tone": "concise and professional",
+  "imageStyle": "photo-realistic",
+  "editorMode": "freeform",
+  "additionalInstructions": "Include title slide, agenda, 3 data slides, roadmap, asks. Add short speaker notes for each slide."
+}
+```
+
+## Retrieving Assets: gamma__get-presentation-assets Parameters
+
+After you generate a presentation, the generator returns a generationId and usually a viewing link. Use the generationId to fetch downloadable assets (PDF/PPTX).
+
+- generationId (string) — REQUIRED
+  - Description: The generationId returned by the generate call.
+  - Example: "abc123def456"
+
+- download (boolean) — optional
+  - Description: If true, the integration will attempt to download PDF/PPTX assets to the server and return local file paths. If false or omitted, the API typically returns URLs for the assets.
+  - Example: true
+
+Example call to fetch assets
+
+```json
+{
+  "generationId": "abc123def456",
+  "download": true
+}
+```
 
 ## Running Your Server
 

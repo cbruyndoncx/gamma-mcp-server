@@ -77,7 +77,7 @@ async function generatePresentation(params) {
         return { url: null, error: `Timed out waiting for generation ${genId}` };
     }
     catch (error) {
-        console.error("Error making Gamma API request:", error);
+        /* suppressed to avoid writing to stdio */
         return { url: null, error: error.message || String(error) };
     }
 }
@@ -156,11 +156,8 @@ async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error("Gamma MCP Server running on stdio");
-    // logt the  api key
-    console.log("Gamma API Key:", GAMMA_API_KEY);
 }
 main().catch((error) => {
-    console.error("Fatal error in main():", error);
     process.exit(1);
 });
 // Tool: get-presentation-assets
