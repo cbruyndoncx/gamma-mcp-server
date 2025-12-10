@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "name": "gamma-mcp-server",
+  "name": "gamma-mcpserver",
   "bin": {
     "gamma-mcp-server": "./build/index.js"
   },
