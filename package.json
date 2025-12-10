@@ -1,8 +1,8 @@
 {
   "type": "module",
-  "name": "gamma-mcpserver",
+  "name": "gamma-mcp-server",
   "bin": {
-    "gamma-mcpserver": "./build/index.js"
+    "gamma-mcp-server": "./build/index.js"
   },
   "scripts": {
     "build": "tsc && chmod 755 build/index.js"
