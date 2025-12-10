@@ -1,4 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+// Added tool: get-presentation-assets
+// Usage: call tool "get-presentation-assets" with { generationId: string }
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import fetch from "node-fetch";
@@ -160,4 +162,98 @@ async function main() {
 main().catch((error) => {
     console.error("Fatal error in main():", error);
     process.exit(1);
+});
+// Tool: get-presentation-assets
+server.tool("get-presentation-assets", "Given a generationId return downloadable URLs for pdf and pptx if available, and optionally download them into the MCP server and return local paths.", {
+    generationId: z.string().describe("The generationId returned by the Gamma generate API."),
+    download: z.boolean().optional().describe("If true, download the assets and return local file paths."),
+}, async (params) => {
+    const { generationId, download } = params;
+    const statusUrl = `https://public-api.gamma.app/v1.0/generations/${generationId}`;
+    try {
+        const stResp = await fetch(statusUrl, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "X-API-KEY": GAMMA_API_KEY || "",
+            },
+        });
+        if (!stResp.ok) {
+            const body = await stResp.text();
+            return {
+                content: [
+                    { type: "text", text: `Failed to fetch generation ${generationId}: ${stResp.status} ${body}` },
+                ],
+            };
+        }
+        const stData = await stResp.json();
+        const pdf = stData.exportUrl && stData.exportUrl.endsWith('.pdf') ? stData.exportUrl : null;
+        const pptx = stData.exportUrl && stData.exportUrl.endsWith('.pptx') ? stData.exportUrl : null;
+        // Sometimes API returns exportUrl plus separate export links object - search for common keys
+        const possiblePdf = pdf || stData.pdfUrl || stData.export_url || stData.exports?.find((e) => e.endsWith('.pdf')) || stData.exports?.find((e) => e.url && e.url.endsWith('.pdf'))?.url;
+        const possiblePptx = pptx || stData.pptxUrl || stData.export_url || stData.exports?.find((e) => e.endsWith('.pptx')) || stData.exports?.find((e) => e.url && e.url.endsWith('.pptx'))?.url;
+        const resp = { generationId };
+        if (possiblePdf)
+            resp.pdf = possiblePdf;
+        if (possiblePptx)
+            resp.pptx = possiblePptx;
+        if (download) {
+            const downloads = {};
+            const fs = await import('fs');
+            const path = await import('path');
+            if (possiblePdf) {
+                const fname = path.join('/tmp', `${generationId}.pdf`);
+                const w = fs.createWriteStream(fname);
+                const r = await fetch(possiblePdf, { method: 'GET' });
+                if (r.ok) {
+                    await new Promise((res, rej) => {
+                        const stream = r.body;
+                        stream.pipe(w);
+                        w.on('finish', res);
+                        w.on('error', rej);
+                    });
+                    downloads.pdf = fname;
+                }
+                else {
+                    downloads.pdf_error = `${r.status} ${await r.text()}`;
+                }
+            }
+            if (possiblePptx) {
+                const fname = path.join('/tmp', `${generationId}.pptx`);
+                const w = fs.createWriteStream(fname);
+                const r = await fetch(possiblePptx, { method: 'GET' });
+                if (r.ok) {
+                    await new Promise((res, rej) => {
+                        const stream = r.body;
+                        stream.pipe(w);
+                        w.on('finish', res);
+                        w.on('error', rej);
+                    });
+                    downloads.pptx = fname;
+                }
+                else {
+                    downloads.pptx_error = `${r.status} ${await r.text()}`;
+                }
+            }
+            resp.downloads = downloads;
+        }
+        // MCP expects structured content types. Return resource objects when possible.
+        const content = [];
+        const resourceObj = { generationId };
+        if (possiblePdf)
+            resourceObj.pdf = possiblePdf;
+        if (possiblePptx)
+            resourceObj.pptx = possiblePptx;
+        if (download && resp.downloads)
+            resourceObj.downloads = resp.downloads;
+        content.push({ type: 'resource', resource: { text: JSON.stringify(resourceObj), uri: '', mimeType: 'application/json' } });
+        return { content };
+    }
+    catch (err) {
+        return {
+            content: [
+                { type: 'text', text: `Error fetching generation: ${err.message || err}` },
+            ],
+        };
+    }
 });
