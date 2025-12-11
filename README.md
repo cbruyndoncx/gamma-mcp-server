@@ -18,7 +18,7 @@ Model Context Protocol servers can provide three main types of capabilities:
 - **Tools**: Functions that can be called by the LLM (with user approval).
 - **Prompts**: Pre-written templates that help users accomplish specific tasks.
 
-This server primarily focuses on providing a **Tool**.
+This server provides both **Tools** and **Prompts** for comprehensive presentation generation.
 
 ## Prerequisite Knowledge
 
@@ -411,5 +411,275 @@ When you ask a question in Claude for Desktop:
 - **`ts-node` or Module Issues:**
   - Ensure `typescript` and `ts-node` are installed locally in your project (`npm ls ts-node typescript`).
   - Check your `tsconfig.json` for compatibility with your Node.js version and module system (ESM vs CommonJS). If using ESM (`"type": "module"` in `package.json`), ensure `ts-node` is compatible or use `ts-node-esm`. The provided `index.ts` uses ES module imports.
+
+## Using Prompts for Quick Presentation Generation
+
+This MCP server includes 10 pre-built prompts that make it easy to generate common types of presentations. Each prompt is optimized with the right parameters and structure for its specific use case.
+
+### Available Prompts
+
+All prompts automatically export to PowerPoint (PPTX) format for easy editing and sharing.
+
+#### 1. business-pitch-deck
+Generate a professional investor pitch deck with all the essential slides.
+
+**Required Parameters:**
+- `company_name`: Name of your company or product
+- `industry`: Industry or sector (e.g., 'fintech', 'healthcare AI', 'e-commerce')
+
+**Optional Parameters:**
+- `stage`: Company stage (e.g., 'seed', 'Series A', 'growth')
+
+**Example Usage:**
+```
+Use the business-pitch-deck prompt with company_name "AcmeTech", industry "SaaS fintech", and stage "Series A"
+```
+
+**What You Get:** 12 slides including problem, solution, market opportunity, business model, traction, competitive landscape, team, financials, and ask.
+
+---
+
+#### 2. product-launch
+Generate a product launch presentation for internal teams.
+
+**Required Parameters:**
+- `product_name`: Name of the product being launched
+- `target_audience`: Target customer segment (e.g., 'small businesses', 'enterprise IT teams')
+
+**Optional Parameters:**
+- `launch_date`: Expected or actual launch date
+
+**Example Usage:**
+```
+Use the product-launch prompt with product_name "CloudSync Pro", target_audience "enterprise IT teams", and launch_date "Q1 2025"
+```
+
+**What You Get:** 14 slides including market context, product overview, value proposition, pricing, GTM strategy, marketing campaign, and success metrics.
+
+---
+
+#### 3. quarterly-business-review
+Generate a QBR presentation with metrics and insights.
+
+**Required Parameters:**
+- `quarter`: Quarter and year (e.g., 'Q3 2024')
+
+**Optional Parameters:**
+- `department`: Department or business unit (e.g., 'Sales', 'Engineering', 'Company-wide')
+
+**Example Usage:**
+```
+Use the quarterly-business-review prompt with quarter "Q4 2024" and department "Sales"
+```
+
+**What You Get:** 13 slides including executive summary, key metrics, highlights, performance vs. targets, financials, challenges, and next quarter priorities.
+
+---
+
+#### 4. training-workshop
+Generate an educational training or workshop presentation.
+
+**Required Parameters:**
+- `topic`: Training topic or workshop title
+
+**Optional Parameters:**
+- `duration`: Workshop duration (e.g., '2 hours', 'half-day', 'full-day')
+- `skill_level`: Audience skill level (e.g., 'beginner', 'intermediate', 'advanced')
+
+**Example Usage:**
+```
+Use the training-workshop prompt with topic "Data Analytics with Python", duration "4 hours", and skill_level "intermediate"
+```
+
+**What You Get:** 14 slides including learning objectives, core concepts with examples, hands-on exercises, best practices, case studies, and resources.
+
+---
+
+#### 5. sales-proposal
+Generate a customized sales proposal for prospects.
+
+**Required Parameters:**
+- `prospect_name`: Name of the prospect company
+- `solution`: Your product or solution being proposed
+
+**Optional Parameters:**
+- `budget_range`: Budget range or deal size (e.g., '$50K-$100K', 'enterprise tier')
+
+**Example Usage:**
+```
+Use the sales-proposal prompt with prospect_name "Global Manufacturing Inc", solution "Enterprise CRM Platform", and budget_range "$200K-$300K annually"
+```
+
+**What You Get:** 13 slides including understanding their challenges, proposed solution, implementation roadmap, case studies, ROI justification, pricing, and next steps.
+
+---
+
+#### 6. conference-talk
+Generate a conference or keynote presentation.
+
+**Required Parameters:**
+- `talk_title`: Title of your talk or presentation
+
+**Optional Parameters:**
+- `conference`: Conference name or event
+- `talk_length`: Presentation length (e.g., '20 minutes', '45 minutes', '1 hour')
+
+**Example Usage:**
+```
+Use the conference-talk prompt with talk_title "The Future of Edge Computing", conference "TechCon 2025", and talk_length "45 minutes"
+```
+
+**What You Get:** 14 slides with minimal text per slide, bold visuals, hook, key insights, real-world examples, and call to action. Designed for stage presentation.
+
+---
+
+#### 7. project-kickoff
+Generate a project kickoff presentation for team alignment.
+
+**Required Parameters:**
+- `project_name`: Name of the project
+
+**Optional Parameters:**
+- `project_duration`: Expected project duration (e.g., '3 months', '6 weeks', 'Q1 2025')
+
+**Example Usage:**
+```
+Use the project-kickoff prompt with project_name "Mobile App Redesign" and project_duration "4 months"
+```
+
+**What You Get:** 14 slides including vision, objectives, scope, team roles (RACI), timeline, budget, risks, communication plan, and first sprint priorities.
+
+---
+
+#### 8. executive-briefing
+Generate a concise executive briefing for leadership.
+
+**Required Parameters:**
+- `topic`: Topic or issue being briefed (e.g., 'Market expansion strategy', 'Security incident')
+
+**Optional Parameters:**
+- `urgency`: Urgency level (e.g., 'routine', 'important', 'urgent')
+
+**Example Usage:**
+```
+Use the executive-briefing prompt with topic "Cybersecurity Incident Response" and urgency "urgent"
+```
+
+**What You Get:** 11 concise slides with executive summary, situation overview, impact analysis, options, recommendations, risk assessment, and decision points.
+
+---
+
+#### 9. investor-update
+Generate periodic investor update presentations.
+
+**Required Parameters:**
+- `period`: Update period (e.g., 'Q2 2024', 'Monthly - June', 'Annual 2024')
+
+**Optional Parameters:**
+- `company_name`: Company name
+
+**Example Usage:**
+```
+Use the investor-update prompt with period "Q3 2024" and company_name "StartupCo"
+```
+
+**What You Get:** 13 slides including financial performance, key metrics, product developments, customer traction, milestones, challenges, outlook, and asks.
+
+---
+
+#### 10. all-hands-meeting
+Generate an engaging all-hands company meeting presentation.
+
+**Required Parameters:**
+- `date`: Meeting date or period (e.g., 'December 2024', 'End of Year')
+
+**Optional Parameters:**
+- `company_size`: Approximate company size (e.g., 'startup 20 people', 'mid-size 200', 'enterprise')
+
+**Example Usage:**
+```
+Use the all-hands-meeting prompt with date "December 2024" and company_size "startup 50 people"
+```
+
+**What You Get:** 14 slides including vision, wins, business performance, product updates, customer stories, team growth, values in action, and recognition.
+
+---
+
+### Prompt Features
+
+All prompts include:
+- **Automatic PPT Export**: Every prompt is configured with `exportAs: pptx` for immediate PowerPoint download
+- **Speaker Notes**: Detailed notes for presenters with talking points and facilitation tips
+- **Optimized Structure**: Pre-designed slide sequences for each presentation type
+- **Contextual Parameters**: Each prompt uses the right `tone`, `audience`, and `imageStyle` for its purpose
+- **Professional Formatting**: Appropriate text amounts and visual styles for the use case
+
+### Advanced Tool Usage
+
+For complete control, you can use the `generate-presentation` tool directly with custom parameters:
+
+**All Available Parameters:**
+
+```javascript
+{
+  // Required
+  inputText: "Your presentation topic and instructions",
+
+  // Format and export
+  format: "presentation" | "document" | "social" | "webpage",
+  exportAs: "pdf" | "pptx",  // Request direct export
+
+  // Content control
+  numCards: 1-75,  // Number of slides
+  textMode: "generate" | "condense" | "preserve",
+
+  // Text options (legacy - simple)
+  textAmount: "short" | "medium" | "long",
+
+  // Text options (new - detailed)
+  textOptions: {
+    amount: "brief" | "medium" | "detailed" | "extensive",
+    tone: "professional and confident",
+    audience: "investors and venture capitalists",
+    language: "en"
+  },
+
+  // Image options
+  imageOptions: {
+    source: "ai-generated" | "stock" | "none",
+    model: "dall-e-3",
+    style: "photo-realistic and professional"
+  },
+
+  // Additional customization
+  additionalInstructions: "Include speaker notes, add charts...",
+  themeId: "specific-theme-id",
+  folderIds: ["folder-id-1"],
+  cardSplit: "auto"
+}
+```
+
+**Example Custom Usage:**
+```
+Use generate-presentation with:
+- inputText: "Create a 10-slide presentation about sustainable energy solutions for college students"
+- numCards: 10
+- textOptions: { amount: "medium", tone: "educational and inspiring", audience: "college students" }
+- imageOptions: { style: "modern illustrations", model: "dall-e-3" }
+- exportAs: "pptx"
+- additionalInstructions: "Include data visualizations for renewable energy growth. Add discussion questions on each slide."
+```
+
+### Retrieving Downloads
+
+After generation, use the `get-presentation-assets` tool to fetch PDF/PPTX downloads:
+
+```
+Use get-presentation-assets with generationId "abc123" and download true
+```
+
+This returns local file paths to the downloaded assets.
+
+---
 
 This guide should provide a comprehensive overview of setting up and using your Gamma MCP server. Happy presenting!

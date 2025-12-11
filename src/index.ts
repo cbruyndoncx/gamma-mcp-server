@@ -141,6 +141,7 @@ const server = new McpServer({
   capabilities: {
     resources: {},
     tools: {},
+    prompts: {},
   },
 });
 
@@ -306,6 +307,509 @@ server.tool(
     } catch (err: any) {
       return { content: [{ type: 'text', text: `Error fetching generation: ${err.message || err}` }] };
     }
+  }
+);
+
+// Register prompts for common presentation types
+server.prompt(
+  "business-pitch-deck",
+  "Generate a professional business pitch deck with investor-focused content",
+  {
+    company_name: z.string().describe("Name of the company or product"),
+    industry: z.string().describe("Industry or sector (e.g., 'fintech', 'healthcare AI', 'e-commerce')"),
+    stage: z.string().optional().describe("Company stage (e.g., 'seed', 'Series A', 'growth')"),
+  },
+  async (args) => {
+    const companyName = args.company_name || "Your Company";
+    const industry = args.industry || "technology";
+    const stage = args.stage || "seed";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create a professional investor pitch deck for ${companyName}, a ${stage} stage ${industry} company.
+
+Structure the presentation with these slides:
+1. Cover slide with company name and tagline
+2. Problem statement (market pain points)
+3. Solution overview (your product/service)
+4. Market opportunity (TAM/SAM/SOM)
+5. Business model (revenue streams)
+6. Traction (key metrics, growth, customers)
+7. Competitive landscape
+8. Go-to-market strategy
+9. Team (founders and key hires)
+10. Financial projections (3-5 year outlook)
+11. Use of funds (if raising)
+12. Closing ask
+
+Use the generate-presentation tool with these parameters:
+- numCards: 12
+- textAmount: medium
+- tone: professional and confident
+- audience: investors and venture capitalists
+- imageStyle: photo-realistic and professional
+- exportAs: pptx
+- additionalInstructions: Include speaker notes for each slide with talking points. Use data-driven language. Add charts for metrics and financials where appropriate.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "product-launch",
+  "Generate a product launch presentation for marketing and sales teams",
+  {
+    product_name: z.string().describe("Name of the product being launched"),
+    target_audience: z.string().describe("Target customer segment (e.g., 'small businesses', 'enterprise IT teams')"),
+    launch_date: z.string().optional().describe("Expected or actual launch date"),
+  },
+  async (args) => {
+    const productName = args.product_name || "New Product";
+    const targetAudience = args.target_audience || "customers";
+    const launchDate = args.launch_date || "upcoming quarter";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create an engaging product launch presentation for ${productName}, targeting ${targetAudience}, with a launch planned for ${launchDate}.
+
+Structure the presentation with these slides:
+1. Title slide with product name and launch date
+2. Executive summary (elevator pitch)
+3. Market context (why now?)
+4. Product overview and key features
+5. Value proposition (benefits over features)
+6. Target customer personas
+7. Competitive differentiation
+8. Pricing and packaging
+9. Go-to-market strategy
+10. Marketing campaign overview
+11. Sales enablement and tools
+12. Success metrics and KPIs
+13. Launch timeline and milestones
+14. Q&A and next steps
+
+Use the generate-presentation tool with these parameters:
+- numCards: 14
+- textAmount: medium
+- tone: enthusiastic and persuasive
+- audience: marketing and sales teams
+- imageStyle: modern and vibrant
+- exportAs: pptx
+- additionalInstructions: Include speaker notes. Use engaging visuals. Add product screenshots or mockups where relevant. Include timeline visualizations.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "quarterly-business-review",
+  "Generate a quarterly business review (QBR) presentation with metrics and insights",
+  {
+    quarter: z.string().describe("Quarter and year (e.g., 'Q3 2024')"),
+    department: z.string().optional().describe("Department or business unit (e.g., 'Sales', 'Engineering', 'Company-wide')"),
+  },
+  async (args) => {
+    const quarter = args.quarter || "Q4 2024";
+    const department = args.department || "Company-wide";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create a comprehensive quarterly business review presentation for ${quarter} - ${department}.
+
+Structure the presentation with these slides:
+1. Title slide (QBR ${quarter})
+2. Executive summary
+3. Key metrics dashboard
+4. Quarter highlights and wins
+5. Performance vs. targets
+6. Revenue and financial overview
+7. Customer metrics (acquisition, retention, NPS)
+8. Product/service updates
+9. Challenges and blockers
+10. Lessons learned
+11. Priorities for next quarter
+12. Resource needs and asks
+13. Appendix (detailed data)
+
+Use the generate-presentation tool with these parameters:
+- numCards: 13
+- textAmount: medium
+- tone: analytical and professional
+- audience: executives and leadership team
+- imageStyle: clean charts and data visualizations
+- exportAs: pptx
+- additionalInstructions: Include speaker notes with detailed talking points. Add placeholder charts for metrics. Use professional color scheme. Include data tables in appendix.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "training-workshop",
+  "Generate an educational training or workshop presentation",
+  {
+    topic: z.string().describe("Training topic or workshop title"),
+    duration: z.string().optional().describe("Workshop duration (e.g., '2 hours', 'half-day', 'full-day')"),
+    skill_level: z.string().optional().describe("Audience skill level (e.g., 'beginner', 'intermediate', 'advanced')"),
+  },
+  async (args) => {
+    const topic = args.topic || "Professional Development";
+    const duration = args.duration || "2 hours";
+    const skillLevel = args.skill_level || "intermediate";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create an engaging training workshop presentation on "${topic}" for a ${duration} session targeting ${skillLevel} participants.
+
+Structure the presentation with these slides:
+1. Title slide with topic and learning objectives
+2. Agenda and session overview
+3. Introduction and icebreaker
+4. Background and context
+5. Core concept #1 (with examples)
+6. Core concept #2 (with examples)
+7. Core concept #3 (with examples)
+8. Hands-on exercise or activity
+9. Common pitfalls and how to avoid them
+10. Best practices and tips
+11. Real-world case studies
+12. Q&A and discussion
+13. Key takeaways and action items
+14. Resources and next steps
+
+Use the generate-presentation tool with these parameters:
+- numCards: 14
+- textAmount: medium
+- tone: educational and engaging
+- audience: ${skillLevel} learners and workshop participants
+- imageStyle: educational diagrams and illustrations
+- exportAs: pptx
+- additionalInstructions: Include detailed speaker notes with facilitation tips. Add interactive elements. Use clear examples and analogies. Include exercise instructions.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "sales-proposal",
+  "Generate a customized sales proposal presentation for prospects",
+  {
+    prospect_name: z.string().describe("Name of the prospect company"),
+    solution: z.string().describe("Your product or solution being proposed"),
+    budget_range: z.string().optional().describe("Budget range or deal size (e.g., '$50K-$100K', 'enterprise tier')"),
+  },
+  async (args) => {
+    const prospectName = args.prospect_name || "Prospect Company";
+    const solution = args.solution || "our solution";
+    const budgetRange = args.budget_range || "standard tier";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create a persuasive sales proposal presentation for ${prospectName} proposing ${solution} at ${budgetRange}.
+
+Structure the presentation with these slides:
+1. Cover slide with prospect name and date
+2. Agenda
+3. Understanding your challenges (prospect's pain points)
+4. Our proposed solution
+5. Key features and capabilities
+6. Implementation roadmap
+7. Success stories and case studies
+8. ROI and value justification
+9. Pricing and investment
+10. Our team and support
+11. Why choose us (differentiators)
+12. Next steps and timeline
+13. Appendix (detailed specs)
+
+Use the generate-presentation tool with these parameters:
+- numCards: 13
+- textAmount: medium
+- tone: consultative and value-focused
+- audience: decision makers and procurement teams
+- imageStyle: professional and trustworthy
+- exportAs: pptx
+- additionalInstructions: Include speaker notes with objection handling. Personalize for ${prospectName}. Add ROI calculator. Include customer testimonials and logos.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "conference-talk",
+  "Generate a conference or keynote presentation",
+  {
+    talk_title: z.string().describe("Title of your talk or presentation"),
+    conference: z.string().optional().describe("Conference name or event"),
+    talk_length: z.string().optional().describe("Presentation length (e.g., '20 minutes', '45 minutes', '1 hour')"),
+  },
+  async (args) => {
+    const talkTitle = args.talk_title || "Innovation in Technology";
+    const conference = args.conference || "Industry Conference";
+    const talkLength = args.talk_length || "30 minutes";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create an engaging conference presentation titled "${talkTitle}" for ${conference}, designed for a ${talkLength} talk.
+
+Structure the presentation with these slides:
+1. Title slide with speaker bio
+2. Hook or attention-grabber
+3. Agenda and key takeaways
+4. Background and context
+5. The problem or challenge
+6. Your unique insight or approach
+7. Deep dive: Key point #1
+8. Deep dive: Key point #2
+9. Deep dive: Key point #3
+10. Real-world examples and demos
+11. Lessons learned
+12. Future implications
+13. Call to action
+14. Thank you and contact info
+
+Use the generate-presentation tool with these parameters:
+- numCards: 14
+- textAmount: short
+- tone: inspiring and thought-provoking
+- audience: conference attendees and industry professionals
+- imageStyle: bold and impactful visuals
+- exportAs: pptx
+- additionalInstructions: Include minimal text per slide (presentation-style, not document-style). Add compelling visuals. Include speaker notes with timing suggestions. Design for stage presentation with high contrast.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "project-kickoff",
+  "Generate a project kickoff presentation for team alignment",
+  {
+    project_name: z.string().describe("Name of the project"),
+    project_duration: z.string().optional().describe("Expected project duration (e.g., '3 months', '6 weeks', 'Q1 2025')"),
+  },
+  async (args) => {
+    const projectName = args.project_name || "New Project";
+    const projectDuration = args.project_duration || "3 months";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create a comprehensive project kickoff presentation for "${projectName}" with an expected duration of ${projectDuration}.
+
+Structure the presentation with these slides:
+1. Title slide (Project Kickoff)
+2. Meeting agenda
+3. Project vision and objectives
+4. Success criteria and KPIs
+5. Scope and deliverables
+6. Team roles and responsibilities
+7. Project timeline and milestones
+8. Budget and resources
+9. Stakeholders and communication plan
+10. Risks and mitigation strategies
+11. Dependencies and constraints
+12. Ways of working (processes, tools)
+13. First sprint/phase priorities
+14. Q&A and next steps
+
+Use the generate-presentation tool with these parameters:
+- numCards: 14
+- textAmount: medium
+- tone: clear and collaborative
+- audience: project team members and stakeholders
+- imageStyle: clean diagrams and timelines
+- exportAs: pptx
+- additionalInstructions: Include speaker notes. Add project timeline visualization. Include RACI matrix for roles. Add risk assessment matrix. Use team-friendly language.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "executive-briefing",
+  "Generate a concise executive briefing for leadership",
+  {
+    topic: z.string().describe("Topic or issue being briefed (e.g., 'Market expansion strategy', 'Security incident')"),
+    urgency: z.string().optional().describe("Urgency level (e.g., 'routine', 'important', 'urgent')"),
+  },
+  async (args) => {
+    const topic = args.topic || "Strategic Update";
+    const urgency = args.urgency || "important";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create a concise executive briefing on "${topic}" with ${urgency} priority.
+
+Structure the presentation with these slides:
+1. Cover slide with topic and date
+2. Executive summary (one-page overview)
+3. Situation overview
+4. Key findings and insights
+5. Impact analysis (financial, operational, strategic)
+6. Options and recommendations
+7. Risk assessment
+8. Resource requirements
+9. Timeline and next steps
+10. Decision points for leadership
+11. Appendix (supporting data)
+
+Use the generate-presentation tool with these parameters:
+- numCards: 11
+- textAmount: short
+- tone: direct and action-oriented
+- audience: C-level executives and board members
+- imageStyle: executive-level charts and infographics
+- exportAs: pptx
+- additionalInstructions: Use concise bullet points. Lead with conclusions. Include detailed data in appendix. Add decision framework. Highlight critical path items. Use executive summary format.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "investor-update",
+  "Generate an investor update presentation for stakeholders",
+  {
+    period: z.string().describe("Update period (e.g., 'Q2 2024', 'Monthly - June', 'Annual 2024')"),
+    company_name: z.string().optional().describe("Company name"),
+  },
+  async (args) => {
+    const period = args.period || "Q1 2024";
+    const companyName = args.company_name || "Company";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create an investor update presentation for ${companyName} covering ${period}.
+
+Structure the presentation with these slides:
+1. Cover slide (Investor Update - ${period})
+2. Executive summary highlights
+3. Financial performance (revenue, burn, runway)
+4. Key metrics and KPIs
+5. Product developments and releases
+6. Customer growth and traction
+7. Market position and competitive landscape
+8. Team growth and key hires
+9. Milestones achieved
+10. Challenges and how we're addressing them
+11. Outlook and priorities
+12. Capital needs (if applicable)
+13. Ask and next steps
+
+Use the generate-presentation tool with these parameters:
+- numCards: 13
+- textAmount: medium
+- tone: transparent and confident
+- audience: investors, board members, and advisors
+- imageStyle: professional financial charts
+- exportAs: pptx
+- additionalInstructions: Include detailed speaker notes. Add financial charts and growth metrics. Use consistent formatting. Include YoY and MoM comparisons. Highlight both wins and challenges transparently.`,
+          },
+        },
+      ],
+    };
+  }
+);
+
+server.prompt(
+  "all-hands-meeting",
+  "Generate an all-hands company meeting presentation",
+  {
+    date: z.string().describe("Meeting date or period (e.g., 'December 2024', 'End of Year')"),
+    company_size: z.string().optional().describe("Approximate company size (e.g., 'startup 20 people', 'mid-size 200', 'enterprise')"),
+  },
+  async (args) => {
+    const date = args.date || "This Month";
+    const companySize = args.company_size || "growing company";
+
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Create an engaging all-hands company meeting presentation for ${date} at a ${companySize}.
+
+Structure the presentation with these slides:
+1. Welcome and agenda
+2. Company vision and mission reminder
+3. Recent wins and achievements
+4. Business performance overview
+5. Product updates and roadmap
+6. Customer success stories
+7. Team growth and new hires
+8. Department spotlights
+9. Company values in action
+10. Challenges and learnings
+11. Looking ahead (priorities)
+12. Q&A
+13. Team recognition and shoutouts
+14. Closing and next all-hands date
+
+Use the generate-presentation tool with these parameters:
+- numCards: 14
+- textAmount: medium
+- tone: inspiring and inclusive
+- audience: entire company, all departments
+- imageStyle: vibrant and team-oriented
+- exportAs: pptx
+- additionalInstructions: Include engaging visuals. Add team photos or celebrations. Use accessible language for all roles. Include interactive Q&A section. Celebrate wins and recognize contributors. Keep morale-building tone.`,
+          },
+        },
+      ],
+    };
   }
 );
 
