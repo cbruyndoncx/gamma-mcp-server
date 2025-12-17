@@ -170,8 +170,23 @@ export function registerGenerateExecutivePresentationTool(server) {
                 source: "aiGenerated",
                 style: "photorealistic",
             },
+            cardOptions: {
+                dimensions: "16x9",
+                headerFooter: {
+                    bottomLeft: {
+                        type: "image",
+                        source: "themeLogo",
+                        size: "sm"
+                    },
+                    bottomRight: {
+                        type: "cardNumber",
+                    },
+                    hideFromFirstCard: true,
+                    hideFromLastCard: false
+                }
+            }
         };
-        // Add optional theme
+        // Add optional theme to override default workspace my themeId: "8swvg4jprrkqbfw"
         if (params.themeId) {
             executiveParams.themeId = params.themeId;
         }
@@ -222,7 +237,19 @@ export function registerGenerateExecutiveReportTool(server) {
             textMode: "preserve",
             exportAs: "pdf",
             cardOptions: {
-                dimensions: "a4", // A4 document format
+                dimensions: "a4",
+                headerFooter: {
+                    topLeft: {
+                        type: "image",
+                        source: "themeLogo",
+                        size: "sm"
+                    },
+                    bottomRight: {
+                        type: "cardNumber",
+                    },
+                    hideFromFirstCard: true,
+                    hideFromLastCard: false
+                }
             },
             textOptions: {
                 amount: "detailed",
@@ -234,7 +261,7 @@ export function registerGenerateExecutiveReportTool(server) {
                 style: "photorealistic",
             },
         };
-        // Add optional theme
+        // Add optional theme to overwrite workspace default themeId: "8swvg4jprrkqbfw"
         if (params.themeId) {
             reportParams.themeId = params.themeId;
         }

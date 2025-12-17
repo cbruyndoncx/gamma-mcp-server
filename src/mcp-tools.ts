@@ -203,12 +203,28 @@ export function registerGenerateExecutivePresentationTool(server: McpServer): vo
           source: "aiGenerated",
           style: "photorealistic",
         },
+        cardOptions: {
+          dimensions: "16x9",
+          headerFooter: {
+            bottomLeft: {
+              type: "image",
+              source: "themeLogo",
+              size: "sm"
+            },
+            bottomRight: {
+              type: "cardNumber",
+            },
+            hideFromFirstCard: true,
+            hideFromLastCard: false
+          }
+        }
       };
 
-      // Add optional theme
+      // Add optional theme to override default workspace my themeId: "8swvg4jprrkqbfw"
       if (params.themeId) {
         executiveParams.themeId = params.themeId;
       }
+      
 
       const { url, generationId, error } = await generatePresentation(executiveParams);
 
@@ -267,6 +283,18 @@ export function registerGenerateExecutiveReportTool(server: McpServer): void {
         exportAs: "pdf",
         cardOptions: {
           dimensions: "a4",  // A4 document format
+          headerFooter: {
+            topLeft: {
+              type: "image",
+              source: "themeLogo",
+              size: "sm"
+            },
+            bottomRight: {
+              type: "cardNumber",
+            },
+            hideFromFirstCard: true,
+            hideFromLastCard: false
+          }
         },
         textOptions: {
           amount: "detailed",  // Detailed content for reports
@@ -277,9 +305,10 @@ export function registerGenerateExecutiveReportTool(server: McpServer): void {
           source: "aiGenerated",
           style: "photorealistic",
         },
+
       };
 
-      // Add optional theme
+      // Add optional theme to overwrite workspace default themeId: "8swvg4jprrkqbfw"
       if (params.themeId) {
         reportParams.themeId = params.themeId;
       }
