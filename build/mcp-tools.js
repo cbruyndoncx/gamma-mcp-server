@@ -260,11 +260,19 @@ export function registerGenerateExecutiveReportTool(server) {
                 ],
             };
         }
+        // Calculate number of cards based on content length
+        // Gamma max 100,000 tokens input, 1 token ~ 4 characters
+        // Estimate ~4000 characters per A4 page for detailed reports
+        // Ensure between 1-75 cards (Gamma API limits)
+        const estimatedCards = Math.ceil(contentText.trim().length / 4000);
+        const numberOfCards = Math.max(1, Math.min(75, estimatedCards));
         // Build request with executive report defaults
         const reportParams = {
             inputText: contentText,
             format: "document",
             textMode: "preserve",
+            numCards: numberOfCards,
+            cardSplit: "auto",
             exportAs: "pdf",
             cardOptions: {
                 dimensions: "a4",
