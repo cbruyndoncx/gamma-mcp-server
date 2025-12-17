@@ -1,0 +1,18 @@
+{
+  "name": "executive-briefing",
+  "description": "Generate a concise executive briefing for leadership",
+  "parameters": {
+    "topic": {
+      "type": "string",
+      "description": "Topic or issue being briefed (e.g., 'Market expansion strategy', 'Security incident')",
+      "required": true
+    },
+    "urgency": {
+      "type": "string",
+      "description": "Urgency level (e.g., 'routine', 'important', 'urgent')",
+      "required": false,
+      "default": "important"
+    }
+  },
+  "template": "Create a concise executive briefing on \"{{topic}}\" with {{urgency}} priority.\n\nStructure the presentation with these slides:\n1. Cover slide with topic and date\n2. Executive summary (one-page overview)\n3. Situation overview\n4. Key findings and insights\n5. Impact analysis (financial, operational, strategic)\n6. Options and recommendations\n7. Risk assessment\n8. Resource requirements\n9. Timeline and next steps\n10. Decision points for leadership\n11. Appendix (supporting data)\n\nUse the generate-presentation tool with these parameters:\n- numCards: 11\n- textAmount: short\n- tone: direct and action-oriented\n- audience: C-level executives and board members\n- imageStyle: executive-level charts and infographics\n- exportAs: pptx\n- additionalInstructions: Use concise bullet points. Lead with conclusions. Include detailed data in appendix. Add decision framework. Highlight critical path items. Use executive summary format."
+}

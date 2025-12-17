@@ -1,0 +1,18 @@
+{
+  "name": "project-kickoff",
+  "description": "Generate a project kickoff presentation for team alignment",
+  "parameters": {
+    "project_name": {
+      "type": "string",
+      "description": "Name of the project",
+      "required": true
+    },
+    "project_duration": {
+      "type": "string",
+      "description": "Expected project duration (e.g., '3 months', '6 weeks', 'Q1 2025')",
+      "required": false,
+      "default": "3 months"
+    }
+  },
+  "template": "Create a comprehensive project kickoff presentation for \"{{project_name}}\" with an expected duration of {{project_duration}}.\n\nStructure the presentation with these slides:\n1. Title slide (Project Kickoff)\n2. Meeting agenda\n3. Project vision and objectives\n4. Success criteria and KPIs\n5. Scope and deliverables\n6. Team roles and responsibilities\n7. Project timeline and milestones\n8. Budget and resources\n9. Stakeholders and communication plan\n10. Risks and mitigation strategies\n11. Dependencies and constraints\n12. Ways of working (processes, tools)\n13. First sprint/phase priorities\n14. Q&A and next steps\n\nUse the generate-presentation tool with these parameters:\n- numCards: 14\n- textAmount: medium\n- tone: clear and collaborative\n- audience: project team members and stakeholders\n- imageStyle: clean diagrams and timelines\n- exportAs: pptx\n- additionalInstructions: Include speaker notes. Add project timeline visualization. Include RACI matrix for roles. Add risk assessment matrix. Use team-friendly language."
+}

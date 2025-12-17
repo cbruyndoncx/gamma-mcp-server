@@ -1,0 +1,24 @@
+{
+  "name": "team-retrospective",
+  "description": "Generate a team retrospective presentation for agile teams",
+  "parameters": {
+    "sprint_number": {
+      "type": "string",
+      "description": "Sprint number or identifier (e.g., 'Sprint 23', 'Q4 Week 3')",
+      "required": true
+    },
+    "team_name": {
+      "type": "string",
+      "description": "Name of the team",
+      "required": false,
+      "default": "Team"
+    },
+    "duration": {
+      "type": "string",
+      "description": "Sprint duration (e.g., '2 weeks', '1 month')",
+      "required": false,
+      "default": "2 weeks"
+    }
+  },
+  "template": "Create an engaging team retrospective presentation for {{team_name}} - {{sprint_number}} ({{duration}} sprint).\n\nStructure the presentation with these slides:\n1. Title slide ({{sprint_number}} Retrospective)\n2. Sprint goals review\n3. What went well (wins and successes)\n4. What didn't go well (challenges and blockers)\n5. Key metrics (velocity, completed stories, etc.)\n6. Action items from previous retro\n7. New action items and improvements\n8. Appreciation and shoutouts\n9. Next sprint focus areas\n\nUse the generate-presentation tool with these parameters:\n- numCards: 9\n- textAmount: medium\n- tone: collaborative and constructive\n- audience: {{team_name}} members\n- imageStyle: friendly and team-oriented\n- exportAs: pptx\n- additionalInstructions: Include space for team input and discussion. Use positive, growth-focused language. Add emoji or icons for engagement."
+}

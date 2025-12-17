@@ -1,0 +1,24 @@
+{
+  "name": "conference-talk",
+  "description": "Generate a conference or keynote presentation",
+  "parameters": {
+    "talk_title": {
+      "type": "string",
+      "description": "Title of your talk or presentation",
+      "required": true
+    },
+    "conference": {
+      "type": "string",
+      "description": "Conference name or event",
+      "required": false,
+      "default": "Industry Conference"
+    },
+    "talk_length": {
+      "type": "string",
+      "description": "Presentation length (e.g., '20 minutes', '45 minutes', '1 hour')",
+      "required": false,
+      "default": "30 minutes"
+    }
+  },
+  "template": "Create an engaging conference presentation titled \"{{talk_title}}\" for {{conference}}, designed for a {{talk_length}} talk.\n\nStructure the presentation with these slides:\n1. Title slide with speaker bio\n2. Hook or attention-grabber\n3. Agenda and key takeaways\n4. Background and context\n5. The problem or challenge\n6. Your unique insight or approach\n7. Deep dive: Key point #1\n8. Deep dive: Key point #2\n9. Deep dive: Key point #3\n10. Real-world examples and demos\n11. Lessons learned\n12. Future implications\n13. Call to action\n14. Thank you and contact info\n\nUse the generate-presentation tool with these parameters:\n- numCards: 14\n- textAmount: short\n- tone: inspiring and thought-provoking\n- audience: conference attendees and industry professionals\n- imageStyle: bold and impactful visuals\n- exportAs: pptx\n- additionalInstructions: Include minimal text per slide (presentation-style, not document-style). Add compelling visuals. Include speaker notes with timing suggestions. Design for stage presentation with high contrast."
+}

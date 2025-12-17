@@ -1,0 +1,18 @@
+{
+  "name": "all-hands-meeting",
+  "description": "Generate an all-hands company meeting presentation",
+  "parameters": {
+    "date": {
+      "type": "string",
+      "description": "Meeting date or period (e.g., 'December 2024', 'End of Year')",
+      "required": true
+    },
+    "company_size": {
+      "type": "string",
+      "description": "Approximate company size (e.g., 'startup 20 people', 'mid-size 200', 'enterprise')",
+      "required": false,
+      "default": "growing company"
+    }
+  },
+  "template": "Create an engaging all-hands company meeting presentation for {{date}} at a {{company_size}}.\n\nStructure the presentation with these slides:\n1. Welcome and agenda\n2. Company vision and mission reminder\n3. Recent wins and achievements\n4. Business performance overview\n5. Product updates and roadmap\n6. Customer success stories\n7. Team growth and new hires\n8. Department spotlights\n9. Company values in action\n10. Challenges and learnings\n11. Looking ahead (priorities)\n12. Q&A\n13. Team recognition and shoutouts\n14. Closing and next all-hands date\n\nUse the generate-presentation tool with these parameters:\n- numCards: 14\n- textAmount: medium\n- tone: inspiring and inclusive\n- audience: entire company, all departments\n- imageStyle: vibrant and team-oriented\n- exportAs: pptx\n- additionalInstructions: Include engaging visuals. Add team photos or celebrations. Use accessible language for all roles. Include interactive Q&A section. Celebrate wins and recognize contributors. Keep morale-building tone."
+}

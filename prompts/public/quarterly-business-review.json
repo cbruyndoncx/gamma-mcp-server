@@ -1,0 +1,18 @@
+{
+  "name": "quarterly-business-review",
+  "description": "Generate a quarterly business review (QBR) presentation with metrics and insights",
+  "parameters": {
+    "quarter": {
+      "type": "string",
+      "description": "Quarter and year (e.g., 'Q3 2024')",
+      "required": true
+    },
+    "department": {
+      "type": "string",
+      "description": "Department or business unit (e.g., 'Sales', 'Engineering', 'Company-wide')",
+      "required": false,
+      "default": "Company-wide"
+    }
+  },
+  "template": "Create a comprehensive quarterly business review presentation for {{quarter}} - {{department}}.\n\nStructure the presentation with these slides:\n1. Title slide (QBR {{quarter}})\n2. Executive summary\n3. Key metrics dashboard\n4. Quarter highlights and wins\n5. Performance vs. targets\n6. Revenue and financial overview\n7. Customer metrics (acquisition, retention, NPS)\n8. Product/service updates\n9. Challenges and blockers\n10. Lessons learned\n11. Priorities for next quarter\n12. Resource needs and asks\n13. Appendix (detailed data)\n\nUse the generate-presentation tool with these parameters:\n- numCards: 13\n- textAmount: medium\n- tone: analytical and professional\n- audience: executives and leadership team\n- imageStyle: clean charts and data visualizations\n- exportAs: pptx\n- additionalInstructions: Include speaker notes with detailed talking points. Add placeholder charts for metrics. Use professional color scheme. Include data tables in appendix."
+}

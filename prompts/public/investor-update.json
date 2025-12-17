@@ -1,0 +1,18 @@
+{
+  "name": "investor-update",
+  "description": "Generate an investor update presentation for stakeholders",
+  "parameters": {
+    "period": {
+      "type": "string",
+      "description": "Update period (e.g., 'Q2 2024', 'Monthly - June', 'Annual 2024')",
+      "required": true
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Company name",
+      "required": false,
+      "default": "Company"
+    }
+  },
+  "template": "Create an investor update presentation for {{company_name}} covering {{period}}.\n\nStructure the presentation with these slides:\n1. Cover slide (Investor Update - {{period}})\n2. Executive summary highlights\n3. Financial performance (revenue, burn, runway)\n4. Key metrics and KPIs\n5. Product developments and releases\n6. Customer growth and traction\n7. Market position and competitive landscape\n8. Team growth and key hires\n9. Milestones achieved\n10. Challenges and how we're addressing them\n11. Outlook and priorities\n12. Capital needs (if applicable)\n13. Ask and next steps\n\nUse the generate-presentation tool with these parameters:\n- numCards: 13\n- textAmount: medium\n- tone: transparent and confident\n- audience: investors, board members, and advisors\n- imageStyle: professional financial charts\n- exportAs: pptx\n- additionalInstructions: Include detailed speaker notes. Add financial charts and growth metrics. Use consistent formatting. Include YoY and MoM comparisons. Highlight both wins and challenges transparently."
+}

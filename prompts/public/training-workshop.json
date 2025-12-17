@@ -1,0 +1,24 @@
+{
+  "name": "training-workshop",
+  "description": "Generate an educational training or workshop presentation",
+  "parameters": {
+    "topic": {
+      "type": "string",
+      "description": "Training topic or workshop title",
+      "required": true
+    },
+    "duration": {
+      "type": "string",
+      "description": "Workshop duration (e.g., '2 hours', 'half-day', 'full-day')",
+      "required": false,
+      "default": "2 hours"
+    },
+    "skill_level": {
+      "type": "string",
+      "description": "Audience skill level (e.g., 'beginner', 'intermediate', 'advanced')",
+      "required": false,
+      "default": "intermediate"
+    }
+  },
+  "template": "Create an engaging training workshop presentation on \"{{topic}}\" for a {{duration}} session targeting {{skill_level}} participants.\n\nStructure the presentation with these slides:\n1. Title slide with topic and learning objectives\n2. Agenda and session overview\n3. Introduction and icebreaker\n4. Background and context\n5. Core concept #1 (with examples)\n6. Core concept #2 (with examples)\n7. Core concept #3 (with examples)\n8. Hands-on exercise or activity\n9. Common pitfalls and how to avoid them\n10. Best practices and tips\n11. Real-world case studies\n12. Q&A and discussion\n13. Key takeaways and action items\n14. Resources and next steps\n\nUse the generate-presentation tool with these parameters:\n- numCards: 14\n- textAmount: medium\n- tone: educational and engaging\n- audience: {{skill_level}} learners and workshop participants\n- imageStyle: educational diagrams and illustrations\n- exportAs: pptx\n- additionalInstructions: Include detailed speaker notes with facilitation tips. Add interactive elements. Use clear examples and analogies. Include exercise instructions."
+}

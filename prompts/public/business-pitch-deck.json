@@ -1,0 +1,23 @@
+{
+  "name": "business-pitch-deck",
+  "description": "Generate a professional business pitch deck with investor-focused content",
+  "parameters": {
+    "company_name": {
+      "type": "string",
+      "description": "Name of the company or product",
+      "required": true
+    },
+    "industry": {
+      "type": "string",
+      "description": "Industry or sector (e.g., 'fintech', 'healthcare AI', 'e-commerce')",
+      "required": true
+    },
+    "stage": {
+      "type": "string",
+      "description": "Company stage (e.g., 'seed', 'Series A', 'growth')",
+      "required": false,
+      "default": "seed"
+    }
+  },
+  "template": "Create a professional investor pitch deck for {{company_name}}, a {{stage}} stage {{industry}} company.\n\nStructure the presentation with these slides:\n1. Cover slide with company name and tagline\n2. Problem statement (market pain points)\n3. Solution overview (your product/service)\n4. Market opportunity (TAM/SAM/SOM)\n5. Business model (revenue streams)\n6. Traction (key metrics, growth, customers)\n7. Competitive landscape\n8. Go-to-market strategy\n9. Team (founders and key hires)\n10. Financial projections (3-5 year outlook)\n11. Use of funds (if raising)\n12. Closing ask\n\nUse the generate-presentation tool with these parameters:\n- numCards: 12\n- textAmount: medium\n- tone: professional and confident\n- audience: investors and venture capitalists\n- imageStyle: photo-realistic and professional\n- exportAs: pptx\n- additionalInstructions: Include speaker notes for each slide with talking points. Use data-driven language. Add charts for metrics and financials where appropriate."
+}

@@ -1,0 +1,23 @@
+{
+  "name": "sales-proposal",
+  "description": "Generate a customized sales proposal presentation for prospects",
+  "parameters": {
+    "prospect_name": {
+      "type": "string",
+      "description": "Name of the prospect company",
+      "required": true
+    },
+    "solution": {
+      "type": "string",
+      "description": "Your product or solution being proposed",
+      "required": true
+    },
+    "budget_range": {
+      "type": "string",
+      "description": "Budget range or deal size (e.g., '$50K-$100K', 'enterprise tier')",
+      "required": false,
+      "default": "standard tier"
+    }
+  },
+  "template": "Create a persuasive sales proposal presentation for {{prospect_name}} proposing {{solution}} at {{budget_range}}.\n\nStructure the presentation with these slides:\n1. Cover slide with prospect name and date\n2. Agenda\n3. Understanding your challenges (prospect's pain points)\n4. Our proposed solution\n5. Key features and capabilities\n6. Implementation roadmap\n7. Success stories and case studies\n8. ROI and value justification\n9. Pricing and investment\n10. Our team and support\n11. Why choose us (differentiators)\n12. Next steps and timeline\n13. Appendix (detailed specs)\n\nUse the generate-presentation tool with these parameters:\n- numCards: 13\n- textAmount: medium\n- tone: consultative and value-focused\n- audience: decision makers and procurement teams\n- imageStyle: professional and trustworthy\n- exportAs: pptx\n- additionalInstructions: Include speaker notes with objection handling. Personalize for {{prospect_name}}. Add ROI calculator. Include customer testimonials and logos."
+}

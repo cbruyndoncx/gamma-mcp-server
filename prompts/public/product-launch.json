@@ -1,0 +1,23 @@
+{
+  "name": "product-launch",
+  "description": "Generate a product launch presentation for marketing and sales teams",
+  "parameters": {
+    "product_name": {
+      "type": "string",
+      "description": "Name of the product being launched",
+      "required": true
+    },
+    "target_audience": {
+      "type": "string",
+      "description": "Target customer segment (e.g., 'small businesses', 'enterprise IT teams')",
+      "required": true
+    },
+    "launch_date": {
+      "type": "string",
+      "description": "Expected or actual launch date",
+      "required": false,
+      "default": "upcoming quarter"
+    }
+  },
+  "template": "Create an engaging product launch presentation for {{product_name}}, targeting {{target_audience}}, with a launch planned for {{launch_date}}.\n\nStructure the presentation with these slides:\n1. Title slide with product name and launch date\n2. Executive summary (elevator pitch)\n3. Market context (why now?)\n4. Product overview and key features\n5. Value proposition (benefits over features)\n6. Target customer personas\n7. Competitive differentiation\n8. Pricing and packaging\n9. Go-to-market strategy\n10. Marketing campaign overview\n11. Sales enablement and tools\n12. Success metrics and KPIs\n13. Launch timeline and milestones\n14. Q&A and next steps\n\nUse the generate-presentation tool with these parameters:\n- numCards: 14\n- textAmount: medium\n- tone: enthusiastic and persuasive\n- audience: marketing and sales teams\n- imageStyle: modern and vibrant\n- exportAs: pptx\n- additionalInstructions: Include speaker notes. Use engaging visuals. Add product screenshots or mockups where relevant. Include timeline visualizations."
+}
