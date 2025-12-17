@@ -308,11 +308,17 @@ export function registerGenerateExecutiveReportTool(server: McpServer): void {
       }
 
       // Calculate number of cards based on content length
-      // Gamma max 100,000 tokens input, 1 token ~ 4 characters
-      // Estimate ~4000 characters per A4 page for detailed reports
-      // Ensure between 1-75 cards (Gamma API limits)
+      // Gamma API allows: 1-15 cards, then increments of 5 up to 60 (20, 25, 30, ..., 60)
+      // Estimate ~1000 characters per A4 page for detailed reports
       const estimatedCards = Math.ceil(contentText.trim().length / 1000);
-      const numberOfCards = Math.max(1, Math.min(60, estimatedCards));
+
+      let numberOfCards: number;
+      if (estimatedCards <= 15) {
+        numberOfCards = Math.max(1, estimatedCards);
+      } else {
+        // Round up to nearest multiple of 5, max 60
+        numberOfCards = Math.min(60, Math.ceil(estimatedCards / 5) * 5);
+      }
 
       // Build request with executive report defaults
       const reportParams: GammaGenerationParams = {

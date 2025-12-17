@@ -4,8 +4,8 @@
 export const GAMMA_API_CONFIG = {
     BASE_URL: "https://public-api.gamma.app/v1.0/generations",
     API_KEY_HEADER: "X-API-KEY",
-    TIMEOUT_MS: 2 * 60000,
-    POLL_INTERVAL_MS: 1500, // 1.5 seconds between polls
+    TIMEOUT_MS: 10 * 60000,
+    POLL_INTERVAL_MS: 30000, // 30 seconds between polls
 };
 export const GAMMA_API_DEFAULTS = {
     FORMAT: "presentation",
