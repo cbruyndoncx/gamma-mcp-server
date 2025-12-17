@@ -18,6 +18,7 @@ export const GAMMA_TEXT_MODES = ["generate", "condense", "preserve"] as const;
 export const GAMMA_TEXT_AMOUNTS = ["brief", "medium", "detailed", "extensive"] as const;
 export const GAMMA_FORMATS = ["presentation", "document", "social", "webpage"] as const;
 export const GAMMA_EXPORT_FORMATS = ["pdf", "pptx"] as const;
+export const GAMMA_CARD_SPLIT = ["auto", "inputTextBreaks"] as const;
 
 /**
  * Image source options for Gamma API

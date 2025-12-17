@@ -3,7 +3,7 @@
  */
 import { z } from "zod";
 import { generatePresentation, getPresentationAssets } from "./gamma-api.js";
-import { GAMMA_TEXT_MODES, GAMMA_TEXT_AMOUNTS, GAMMA_FORMATS, GAMMA_EXPORT_FORMATS, GAMMA_IMAGE_SOURCES, GAMMA_CARD_DIMENSIONS, GAMMA_HEADER_FOOTER_TYPES, GAMMA_HEADER_FOOTER_POSITIONS, GAMMA_HEADER_FOOTER_IMAGE_SOURCES, GAMMA_HEADER_FOOTER_SIZES, } from "./constants.js";
+import { GAMMA_TEXT_MODES, GAMMA_TEXT_AMOUNTS, GAMMA_FORMATS, GAMMA_EXPORT_FORMATS, GAMMA_CARD_SPLIT, GAMMA_IMAGE_SOURCES, GAMMA_CARD_DIMENSIONS, GAMMA_HEADER_FOOTER_TYPES, GAMMA_HEADER_FOOTER_POSITIONS, GAMMA_HEADER_FOOTER_IMAGE_SOURCES, GAMMA_HEADER_FOOTER_SIZES, } from "./constants.js";
 /**
  * Register the generate-presentation tool
  */
@@ -104,7 +104,7 @@ export function registerGeneratePresentationTool(server) {
             .describe("Card/slide layout options including dimensions and header/footer"),
         additionalInstructions: z.string().optional(),
         folderIds: z.array(z.string()).optional(),
-        cardSplit: z.string().optional(),
+        cardSplit: z.enum(GAMMA_CARD_SPLIT).optional().describe(`Card split mode (${GAMMA_CARD_SPLIT.join(" | ")})`),
         themeId: z.string().optional(),
     }, async (params) => {
         // Normalize textMode
@@ -150,9 +150,8 @@ export function registerGeneratePresentationTool(server) {
  */
 export function registerGenerateExecutivePresentationTool(server) {
     server.tool("generate-executive-presentation", "You MUST use this to generate an executive presentation.", {
-        inputText: z.string().describe("The content or topic for the executive presentation."),
-        themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default. Use 'linen' theme for a professional look."),
-        numCards: z.number().min(1).max(75).optional().describe("Number of slides (default: 10)"),
+        inputText: z.string().describe("Markdown slide outline for the executive presentation."),
+        themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default."),
     }, async (params) => {
         // Build request with executive-focused defaults
         const executiveParams = {

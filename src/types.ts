@@ -7,6 +7,7 @@ import type {
   GAMMA_TEXT_AMOUNTS,
   GAMMA_FORMATS,
   GAMMA_EXPORT_FORMATS,
+  GAMMA_CARD_SPLIT,
   GAMMA_IMAGE_SOURCES,
   GAMMA_HEADER_FOOTER_TYPES,
   GAMMA_HEADER_FOOTER_IMAGE_SOURCES,
@@ -17,6 +18,7 @@ export type GammaTextMode = (typeof GAMMA_TEXT_MODES)[number];
 export type GammaTextAmount = (typeof GAMMA_TEXT_AMOUNTS)[number];
 export type GammaFormat = (typeof GAMMA_FORMATS)[number];
 export type GammaExportFormat = (typeof GAMMA_EXPORT_FORMATS)[number];
+export type GammaCardSplit = (typeof GAMMA_CARD_SPLIT)[number];
 export type GammaImageSource = (typeof GAMMA_IMAGE_SOURCES)[number];
 export type GammaHeaderFooterType = (typeof GAMMA_HEADER_FOOTER_TYPES)[number];
 export type GammaHeaderFooterImageSource = (typeof GAMMA_HEADER_FOOTER_IMAGE_SOURCES)[number];
@@ -70,7 +72,7 @@ export interface GammaGenerationParams {
   imageOptions?: GammaImageOptions;
   cardOptions?: GammaCardOptions;
   folderIds?: string[];
-  cardSplit?: string;
+  cardSplit?: GammaCardSplit;
   themeId?: string;
 }
 
