@@ -160,7 +160,7 @@ export function registerGenerateExecutivePresentationTool(server) {
             format: "presentation",
             textMode: "condense",
             exportAs: "pptx",
-            numCards: params.numCards || 10,
+            cardSplit: "inputTextBreaks",
             textOptions: {
                 amount: "medium",
                 tone: "professional and confident",
@@ -264,8 +264,8 @@ export function registerGenerateExecutiveReportTool(server) {
         // Gamma max 100,000 tokens input, 1 token ~ 4 characters
         // Estimate ~4000 characters per A4 page for detailed reports
         // Ensure between 1-75 cards (Gamma API limits)
-        const estimatedCards = Math.ceil(contentText.trim().length / 4000);
-        const numberOfCards = Math.max(1, Math.min(75, estimatedCards));
+        const estimatedCards = Math.ceil(contentText.trim().length / 1000);
+        const numberOfCards = Math.max(1, Math.min(60, estimatedCards));
         // Build request with executive report defaults
         const reportParams = {
             inputText: contentText,
