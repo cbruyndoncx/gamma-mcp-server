@@ -149,7 +149,7 @@ export function registerGeneratePresentationTool(server) {
  * Pre-configured for executive presentations with professional defaults
  */
 export function registerGenerateExecutivePresentationTool(server) {
-    server.tool("generate-executive-presentation", "Generate an executive presentation with professional defaults: condenses text to medium amount, professional tone for executives, photorealistic AI images, exports to PPTX. Only requires the content text.", {
+    server.tool("generate-executive-presentation", "You MUST use this to generate an executive presentation.", {
         inputText: z.string().describe("The content or topic for the executive presentation."),
         themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default. Use 'linen' theme for a professional look."),
         numCards: z.number().min(1).max(75).optional().describe("Number of slides (default: 10)"),
@@ -226,13 +226,43 @@ export function registerGenerateExecutivePresentationTool(server) {
  * Pre-configured for detailed A4 PDF reports with professional defaults
  */
 export function registerGenerateExecutiveReportTool(server) {
-    server.tool("generate-executive-report", "Generate a detailed executive report as A4 PDF with professional defaults: preserves exact text content, detailed amount, professional tone for executives, photorealistic AI images, A4 format, exports to PDF. Only requires the content text.", {
-        inputText: z.string().describe("The content for the executive report. Markdown formatting supported."),
+    server.tool("generate-executive-report", "Generate a detailed executive report as A4 PDF with professional defaults: preserves exact text content, detailed amount, professional tone for executives, photorealistic AI images, A4 format, exports to PDF. Provide either inputText or filePath.", {
+        inputText: z.string().optional().describe("The content for the executive report. Markdown formatting supported. Either this or filePath is required."),
+        filePath: z.string().optional().describe("Path to a file containing the report content. If provided, file content will be used as inputText. Either this or inputText is required."),
         themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default. Use 'linen' theme for a professional look."),
     }, async (params) => {
+        // Read file content if filePath is provided
+        let contentText = params.inputText || "";
+        if (params.filePath) {
+            try {
+                const fs = await import("fs/promises");
+                contentText = await fs.readFile(params.filePath, "utf-8");
+            }
+            catch (err) {
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Failed to read file at ${params.filePath}: ${err.message || err}`,
+                        },
+                    ],
+                };
+            }
+        }
+        // Validate that we have content
+        if (!contentText || contentText.trim().length === 0) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "Error: Either inputText or filePath must be provided with non-empty content.",
+                    },
+                ],
+            };
+        }
         // Build request with executive report defaults
         const reportParams = {
-            inputText: params.inputText,
+            inputText: contentText,
             format: "document",
             textMode: "preserve",
             exportAs: "pdf",

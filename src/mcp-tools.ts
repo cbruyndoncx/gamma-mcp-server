@@ -180,7 +180,7 @@ export function registerGeneratePresentationTool(server: McpServer): void {
 export function registerGenerateExecutivePresentationTool(server: McpServer): void {
   server.tool(
     "generate-executive-presentation",
-    "Generate an executive presentation with professional defaults: condenses text to medium amount, professional tone for executives, photorealistic AI images, exports to PPTX. Only requires the content text.",
+    "You MUST use this to generate an executive presentation.",
     {
       inputText: z.string().describe("The content or topic for the executive presentation."),
       themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default. Use 'linen' theme for a professional look."),
@@ -269,15 +269,47 @@ export function registerGenerateExecutivePresentationTool(server: McpServer): vo
 export function registerGenerateExecutiveReportTool(server: McpServer): void {
   server.tool(
     "generate-executive-report",
-    "Generate a detailed executive report as A4 PDF with professional defaults: preserves exact text content, detailed amount, professional tone for executives, photorealistic AI images, A4 format, exports to PDF. Only requires the content text.",
+    "Generate a detailed executive report as A4 PDF with professional defaults: preserves exact text content, detailed amount, professional tone for executives, photorealistic AI images, A4 format, exports to PDF. Provide either inputText or filePath.",
     {
-      inputText: z.string().describe("The content for the executive report. Markdown formatting supported."),
+      inputText: z.string().optional().describe("The content for the executive report. Markdown formatting supported. Either this or filePath is required."),
+      filePath: z.string().optional().describe("Path to a file containing the report content. If provided, file content will be used as inputText. Either this or inputText is required."),
       themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default. Use 'linen' theme for a professional look."),
     },
     async (params) => {
+      // Read file content if filePath is provided
+      let contentText = params.inputText || "";
+
+      if (params.filePath) {
+        try {
+          const fs = await import("fs/promises");
+          contentText = await fs.readFile(params.filePath, "utf-8");
+        } catch (err: any) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Failed to read file at ${params.filePath}: ${err.message || err}`,
+              },
+            ],
+          };
+        }
+      }
+
+      // Validate that we have content
+      if (!contentText || contentText.trim().length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Error: Either inputText or filePath must be provided with non-empty content.",
+            },
+          ],
+        };
+      }
+
       // Build request with executive report defaults
       const reportParams: GammaGenerationParams = {
-        inputText: params.inputText,
+        inputText: contentText,
         format: "document",
         textMode: "preserve",  // Preserve exact text content
         exportAs: "pdf",
