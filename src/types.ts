@@ -5,16 +5,22 @@
 import type {
   GAMMA_TEXT_MODES,
   GAMMA_TEXT_AMOUNTS,
-  GAMMA_LEGACY_TEXT_AMOUNTS,
   GAMMA_FORMATS,
   GAMMA_EXPORT_FORMATS,
+  GAMMA_IMAGE_SOURCES,
+  GAMMA_HEADER_FOOTER_TYPES,
+  GAMMA_HEADER_FOOTER_IMAGE_SOURCES,
+  GAMMA_HEADER_FOOTER_SIZES,
 } from "./constants.js";
 
 export type GammaTextMode = (typeof GAMMA_TEXT_MODES)[number];
 export type GammaTextAmount = (typeof GAMMA_TEXT_AMOUNTS)[number];
-export type GammaLegacyTextAmount = (typeof GAMMA_LEGACY_TEXT_AMOUNTS)[number];
 export type GammaFormat = (typeof GAMMA_FORMATS)[number];
 export type GammaExportFormat = (typeof GAMMA_EXPORT_FORMATS)[number];
+export type GammaImageSource = (typeof GAMMA_IMAGE_SOURCES)[number];
+export type GammaHeaderFooterType = (typeof GAMMA_HEADER_FOOTER_TYPES)[number];
+export type GammaHeaderFooterImageSource = (typeof GAMMA_HEADER_FOOTER_IMAGE_SOURCES)[number];
+export type GammaHeaderFooterSize = (typeof GAMMA_HEADER_FOOTER_SIZES)[number];
 
 export interface GammaTextOptions {
   amount?: GammaTextAmount;
@@ -24,9 +30,33 @@ export interface GammaTextOptions {
 }
 
 export interface GammaImageOptions {
-  source?: string;
+  source?: GammaImageSource;
   model?: string;
   style?: string;
+}
+
+export interface GammaHeaderFooterElement {
+  type: GammaHeaderFooterType;
+  value?: string; // For type="text": the text content
+  source?: GammaHeaderFooterImageSource; // For type="image": image source
+  src?: string; // For type="image" with source="custom": image URL
+  size?: GammaHeaderFooterSize; // Optional size
+}
+
+export interface GammaHeaderFooter {
+  topLeft?: GammaHeaderFooterElement;
+  topRight?: GammaHeaderFooterElement;
+  topCenter?: GammaHeaderFooterElement;
+  bottomLeft?: GammaHeaderFooterElement;
+  bottomRight?: GammaHeaderFooterElement;
+  bottomCenter?: GammaHeaderFooterElement;
+  hideFromFirstCard?: boolean;
+  hideFromLastCard?: boolean;
+}
+
+export interface GammaCardOptions {
+  dimensions?: string;
+  headerFooter?: GammaHeaderFooter;
 }
 
 export interface GammaGenerationParams {
@@ -36,13 +66,9 @@ export interface GammaGenerationParams {
   numCards?: number;
   exportAs?: GammaExportFormat;
   additionalInstructions?: string;
-  textAmount?: GammaLegacyTextAmount;
-  tone?: string;
-  audience?: string;
-  imageModel?: string;
-  imageStyle?: string;
   textOptions?: GammaTextOptions;
   imageOptions?: GammaImageOptions;
+  cardOptions?: GammaCardOptions;
   folderIds?: string[];
   cardSplit?: string;
   themeId?: string;
@@ -57,6 +83,7 @@ export interface GammaAPIRequestBody {
   additionalInstructions?: string;
   textOptions?: GammaTextOptions;
   imageOptions?: GammaImageOptions;
+  cardOptions?: GammaCardOptions;
   folderIds?: string[];
   cardSplit?: string;
   themeId?: string;

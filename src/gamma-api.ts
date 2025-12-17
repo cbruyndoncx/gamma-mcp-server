@@ -18,8 +18,6 @@ import type {
   GammaAPIResponse,
   GammaAssets,
   GammaAssetDownloads,
-  GammaTextOptions,
-  GammaImageOptions,
 } from "./types.js";
 
 dotenv.config();
@@ -53,28 +51,19 @@ function normalizeRequestBody(params: GammaGenerationParams): GammaAPIRequestBod
     body.additionalInstructions = params.additionalInstructions;
   }
 
-  // Text options - support both legacy flat fields and new nested structure
-  const textOptions: GammaTextOptions = {};
-  if (params.textAmount) textOptions.amount = params.textAmount as any;
-  if (params.textOptions?.amount) textOptions.amount = params.textOptions.amount;
-  if (params.tone) textOptions.tone = params.tone;
-  if (params.textOptions?.tone) textOptions.tone = params.textOptions.tone;
-  if (params.audience) textOptions.audience = params.audience;
-  if (params.textOptions?.audience) textOptions.audience = params.textOptions.audience;
-  if (params.textOptions?.language) textOptions.language = params.textOptions.language;
-  if (Object.keys(textOptions).length) {
-    body.textOptions = textOptions;
+  // Text options
+  if (params.textOptions) {
+    body.textOptions = params.textOptions;
   }
 
-  // Image options - support both legacy flat fields and new nested structure
-  const imageOptions: GammaImageOptions = {};
-  if (params.imageModel) imageOptions.model = params.imageModel;
-  if (params.imageStyle) imageOptions.style = params.imageStyle;
-  if (params.imageOptions?.model) imageOptions.model = params.imageOptions.model;
-  if (params.imageOptions?.style) imageOptions.style = params.imageOptions.style;
-  if (params.imageOptions?.source) imageOptions.source = params.imageOptions.source;
-  if (Object.keys(imageOptions).length) {
-    body.imageOptions = imageOptions;
+  // Image options
+  if (params.imageOptions) {
+    body.imageOptions = params.imageOptions;
+  }
+
+  // Card options (dimensions and header/footer)
+  if (params.cardOptions) {
+    body.cardOptions = params.cardOptions;
   }
 
   // Other optional fields

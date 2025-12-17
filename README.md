@@ -123,8 +123,10 @@ Generate a presentation about sustainable energy solutions for college
 students with 10 slides
 ```
 
-The server provides two MCP tools:
+The server provides four MCP tools:
 - `generate-presentation` - Generate presentations with full customization
+- `generate-executive-presentation` - Quick executive presentations with professional defaults (condense text, brief amount, professional tone, photorealistic images, PPTX export)
+- `generate-executive-report` - Detailed A4 PDF reports with professional defaults (preserve text, detailed amount, professional tone, photorealistic images, A4 format, PDF export)
 - `get-presentation-assets` - Fetch PDF/PPTX downloads
 
 ## Documentation

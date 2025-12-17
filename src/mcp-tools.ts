@@ -6,6 +6,18 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { generatePresentation, getPresentationAssets } from "./gamma-api.js";
 import type { GammaGenerationParams } from "./types.js";
+import {
+  GAMMA_TEXT_MODES,
+  GAMMA_TEXT_AMOUNTS,
+  GAMMA_FORMATS,
+  GAMMA_EXPORT_FORMATS,
+  GAMMA_IMAGE_SOURCES,
+  GAMMA_CARD_DIMENSIONS,
+  GAMMA_HEADER_FOOTER_TYPES,
+  GAMMA_HEADER_FOOTER_POSITIONS,
+  GAMMA_HEADER_FOOTER_IMAGE_SOURCES,
+  GAMMA_HEADER_FOOTER_SIZES,
+} from "./constants.js";
 
 /**
  * Register the generate-presentation tool
@@ -17,13 +29,13 @@ export function registerGeneratePresentationTool(server: McpServer): void {
     {
       inputText: z.string().describe("The topic or prompt for the presentation."),
       textMode: z
-        .enum(["generate", "condense", "preserve"])
+        .enum(GAMMA_TEXT_MODES)
         .optional()
-        .describe("Text mode for Gamma API (generate | condense | preserve)."),
+        .describe(`Text mode for Gamma API (${GAMMA_TEXT_MODES.join(" | ")}).`),
       format: z
-        .string()
+        .enum(GAMMA_FORMATS)
         .optional()
-        .describe("Format to create (presentation | document | social | webpage)."),
+        .describe(`Format to create (${GAMMA_FORMATS.join(" | ")}).`),
       numCards: z
         .number()
         .min(1)
@@ -31,28 +43,87 @@ export function registerGeneratePresentationTool(server: McpServer): void {
         .optional()
         .describe("Number of slides/cards to generate."),
       exportAs: z
-        .string()
+        .enum(GAMMA_EXPORT_FORMATS)
         .optional()
-        .describe("If set, request a direct export: 'pdf' or 'pptx'."),
-      textAmount: z
-        .enum(["short", "medium", "long"])
-        .optional()
-        .describe("Legacy shorthand for text amount (kept for backward compatibility)."),
+        .describe(`If set, request a direct export: ${GAMMA_EXPORT_FORMATS.map(f => `'${f}'`).join(" or ")}.`),
       textOptions: z
         .object({
-          amount: z.enum(["brief", "medium", "detailed", "extensive"]).optional(),
-          tone: z.string().optional(),
-          audience: z.string().optional(),
-          language: z.string().optional(),
+          amount: z.enum(GAMMA_TEXT_AMOUNTS).optional().describe(`Text amount (${GAMMA_TEXT_AMOUNTS.join(" | ")})`),
+          tone: z.string().optional().describe("Tone/voice of the content (e.g., 'professional and confident')"),
+          audience: z.string().optional().describe("Target audience (e.g., 'investors and venture capitalists')"),
+          language: z.string().optional().describe("Output language code (e.g., 'en', 'es')"),
         })
-        .optional(),
+        .optional()
+        .describe("Text generation options for content customization"),
       imageOptions: z
         .object({
-          source: z.string().optional(),
-          model: z.string().optional(),
-          style: z.string().optional(),
+          source: z.enum(GAMMA_IMAGE_SOURCES).optional().describe(`Image source (${GAMMA_IMAGE_SOURCES.join(" | ")})`),
+          model: z.string().optional().describe("AI model for image generation (e.g., 'dall-e-3')"),
+          style: z.string().optional().describe("Visual style for images (e.g., 'photorealistic', 'minimalist')"),
         })
-        .optional(),
+        .optional()
+        .describe("Image generation and sourcing options"),
+      cardOptions: z
+        .object({
+          dimensions: z.string().optional().describe(
+            `Card dimensions. Presentation: ${GAMMA_CARD_DIMENSIONS.PRESENTATION.join(", ")}. ` +
+            `Document: ${GAMMA_CARD_DIMENSIONS.DOCUMENT.join(", ")}. ` +
+            `Social: ${GAMMA_CARD_DIMENSIONS.SOCIAL.join(", ")}`
+          ),
+          headerFooter: z.object({
+            topLeft: z.object({
+              type: z.enum(GAMMA_HEADER_FOOTER_TYPES),
+              value: z.string().optional(),
+              source: z.enum(GAMMA_HEADER_FOOTER_IMAGE_SOURCES).optional(),
+              src: z.string().optional(),
+              size: z.enum(GAMMA_HEADER_FOOTER_SIZES).optional(),
+            }).optional(),
+            topRight: z.object({
+              type: z.enum(GAMMA_HEADER_FOOTER_TYPES),
+              value: z.string().optional(),
+              source: z.enum(GAMMA_HEADER_FOOTER_IMAGE_SOURCES).optional(),
+              src: z.string().optional(),
+              size: z.enum(GAMMA_HEADER_FOOTER_SIZES).optional(),
+            }).optional(),
+            topCenter: z.object({
+              type: z.enum(GAMMA_HEADER_FOOTER_TYPES),
+              value: z.string().optional(),
+              source: z.enum(GAMMA_HEADER_FOOTER_IMAGE_SOURCES).optional(),
+              src: z.string().optional(),
+              size: z.enum(GAMMA_HEADER_FOOTER_SIZES).optional(),
+            }).optional(),
+            bottomLeft: z.object({
+              type: z.enum(GAMMA_HEADER_FOOTER_TYPES),
+              value: z.string().optional(),
+              source: z.enum(GAMMA_HEADER_FOOTER_IMAGE_SOURCES).optional(),
+              src: z.string().optional(),
+              size: z.enum(GAMMA_HEADER_FOOTER_SIZES).optional(),
+            }).optional(),
+            bottomRight: z.object({
+              type: z.enum(GAMMA_HEADER_FOOTER_TYPES),
+              value: z.string().optional(),
+              source: z.enum(GAMMA_HEADER_FOOTER_IMAGE_SOURCES).optional(),
+              src: z.string().optional(),
+              size: z.enum(GAMMA_HEADER_FOOTER_SIZES).optional(),
+            }).optional(),
+            bottomCenter: z.object({
+              type: z.enum(GAMMA_HEADER_FOOTER_TYPES),
+              value: z.string().optional(),
+              source: z.enum(GAMMA_HEADER_FOOTER_IMAGE_SOURCES).optional(),
+              src: z.string().optional(),
+              size: z.enum(GAMMA_HEADER_FOOTER_SIZES).optional(),
+            }).optional(),
+            hideFromFirstCard: z.boolean().optional(),
+            hideFromLastCard: z.boolean().optional(),
+          }).optional().describe(
+            `Header/footer configuration. Positions: ${GAMMA_HEADER_FOOTER_POSITIONS.join(", ")}. ` +
+            `Element types: ${GAMMA_HEADER_FOOTER_TYPES.join(", ")}. ` +
+            `Image sources: ${GAMMA_HEADER_FOOTER_IMAGE_SOURCES.join(", ")}. ` +
+            `Sizes: ${GAMMA_HEADER_FOOTER_SIZES.join(", ")}`
+          ),
+        })
+        .optional()
+        .describe("Card/slide layout options including dimensions and header/footer"),
       additionalInstructions: z.string().optional(),
       folderIds: z.array(z.string()).optional(),
       cardSplit: z.string().optional(),
@@ -95,6 +166,153 @@ export function registerGeneratePresentationTool(server: McpServer): void {
           {
             type: "text",
             text: `Presentation generated! View it here: ${url}`,
+          },
+        ],
+      };
+    }
+  );
+}
+
+/**
+ * Register the generate-executive-presentation convenience tool
+ * Pre-configured for executive presentations with professional defaults
+ */
+export function registerGenerateExecutivePresentationTool(server: McpServer): void {
+  server.tool(
+    "generate-executive-presentation",
+    "Generate an executive presentation with professional defaults: condenses text to medium amount, professional tone for executives, photorealistic AI images, exports to PPTX. Only requires the content text.",
+    {
+      inputText: z.string().describe("The content or topic for the executive presentation."),
+      themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default. Use 'linen' theme for a professional look."),
+      numCards: z.number().min(1).max(75).optional().describe("Number of slides (default: 10)"),
+    },
+    async (params) => {
+      // Build request with executive-focused defaults
+      const executiveParams: GammaGenerationParams = {
+        inputText: params.inputText,
+        format: "presentation",
+        textMode: "condense",
+        exportAs: "pptx",
+        numCards: params.numCards || 10,
+        textOptions: {
+          amount: "medium",
+          tone: "professional and confident",
+          audience: "executives and senior leadership",
+        },
+        imageOptions: {
+          source: "aiGenerated",
+          style: "photorealistic",
+        },
+      };
+
+      // Add optional theme
+      if (params.themeId) {
+        executiveParams.themeId = params.themeId;
+      }
+
+      const { url, generationId, error } = await generatePresentation(executiveParams);
+
+      if (!url) {
+        if (generationId) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Executive presentation created (id=${generationId}). No final URL available yet. Use the get-presentation-assets tool with generationId to fetch exports. Polling error / status: ${error || "unknown"}`,
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to generate executive presentation. Error: ${error || "Unknown error."}`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Executive presentation generated! View it here: ${url}\n\nFormat: Professional PPTX with condensed text, photorealistic images, and executive-focused tone.`,
+          },
+        ],
+      };
+    }
+  );
+}
+
+/**
+ * Register the generate-executive-report convenience tool
+ * Pre-configured for detailed A4 PDF reports with professional defaults
+ */
+export function registerGenerateExecutiveReportTool(server: McpServer): void {
+  server.tool(
+    "generate-executive-report",
+    "Generate a detailed executive report as A4 PDF with professional defaults: preserves exact text content, detailed amount, professional tone for executives, photorealistic AI images, A4 format, exports to PDF. Only requires the content text.",
+    {
+      inputText: z.string().describe("The content for the executive report. Markdown formatting supported."),
+      themeId: z.string().optional().describe("Optional theme ID. If not provided, uses workspace default. Use 'linen' theme for a professional look."),
+    },
+    async (params) => {
+      // Build request with executive report defaults
+      const reportParams: GammaGenerationParams = {
+        inputText: params.inputText,
+        format: "document",
+        textMode: "preserve",  // Preserve exact text content
+        exportAs: "pdf",
+        cardOptions: {
+          dimensions: "a4",  // A4 document format
+        },
+        textOptions: {
+          amount: "detailed",  // Detailed content for reports
+          tone: "professional and confident",
+          audience: "executives and senior leadership",
+        },
+        imageOptions: {
+          source: "aiGenerated",
+          style: "photorealistic",
+        },
+      };
+
+      // Add optional theme
+      if (params.themeId) {
+        reportParams.themeId = params.themeId;
+      }
+
+      const { url, generationId, error } = await generatePresentation(reportParams);
+
+      if (!url) {
+        if (generationId) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Executive report created (id=${generationId}). No final URL available yet. Use the get-presentation-assets tool with generationId to fetch the PDF export. Polling error / status: ${error || "unknown"}`,
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to generate executive report. Error: ${error || "Unknown error."}`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Executive report generated! View it here: ${url}\n\nFormat: A4 PDF with preserved text content, detailed formatting, photorealistic images, and executive-focused professional tone.`,
           },
         ],
       };
@@ -158,5 +376,7 @@ export function registerGetPresentationAssetsTool(server: McpServer): void {
  */
 export function registerAllTools(server: McpServer): void {
   registerGeneratePresentationTool(server);
+  registerGenerateExecutivePresentationTool(server);
+  registerGenerateExecutiveReportTool(server);
   registerGetPresentationAssetsTool(server);
 }
