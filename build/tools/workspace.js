@@ -6,21 +6,7 @@
  */
 import { z } from "zod";
 import { listThemes, listFolders } from "../api/workspace.js";
-import { textResult } from "./format.js";
-function jsonResult(payload) {
-    return {
-        content: [
-            {
-                type: "resource",
-                resource: {
-                    text: JSON.stringify(payload),
-                    uri: "",
-                    mimeType: "application/json",
-                },
-            },
-        ],
-    };
-}
+import { textResult, jsonResult } from "./format.js";
 export function registerGetThemesTool(server) {
     server.tool("get_themes", "Browse or search the workspace theme library, including custom themes. Use the returned id as themeId on a generation tool. If the user names a theme, search by name; otherwise list them and choose on tone and colour keywords.", {
         name: z.string().optional().describe("Search themes by name."),

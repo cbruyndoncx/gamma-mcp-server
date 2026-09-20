@@ -17,6 +17,22 @@ export function textResult(text: string): TextContent {
   return { content: [{ type: "text", text }] };
 }
 
+/** Return structured data as a JSON resource. */
+export function jsonResult(payload: unknown) {
+  return {
+    content: [
+      {
+        type: "resource" as const,
+        resource: {
+          text: JSON.stringify(payload),
+          uri: "",
+          mimeType: "application/json",
+        },
+      },
+    ],
+  };
+}
+
 /**
  * Render a generation result as MCP text content.
  *

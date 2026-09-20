@@ -20,6 +20,16 @@ import {
 } from "./status.js";
 import { registerGetThemesTool, registerGetFoldersTool } from "./workspace.js";
 import {
+  registerGetGammasTool,
+  registerReadGammaTool,
+  registerGetGammaCommentsTool,
+  registerExportGammaTool,
+  registerGetExportStatusTool,
+  registerArchiveGammaTool,
+  registerDeleteGammaTool,
+} from "./management.js";
+import { registerGammaAnalyticsTools } from "./analytics.js";
+import {
   registerGenerateImageTool,
   registerGetImageGenerationStatusTool,
   registerArchiveImageTool,
@@ -43,6 +53,18 @@ export function registerAllTools(server: McpServer): void {
   // Workspace discovery
   registerGetThemesTool(server);
   registerGetFoldersTool(server);
+
+  // Management
+  registerGetGammasTool(server);
+  registerReadGammaTool(server);
+  registerGetGammaCommentsTool(server);
+  registerExportGammaTool(server);
+  registerGetExportStatusTool(server);
+  registerArchiveGammaTool(server);
+  registerDeleteGammaTool(server);
+
+  // Analytics
+  registerGammaAnalyticsTools(server);
 
   // Presets - this server's own additions, beyond official parity
   registerGenerateExecutivePresentationTool(server);

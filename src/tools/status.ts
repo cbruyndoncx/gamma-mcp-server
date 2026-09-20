@@ -9,7 +9,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getPresentationAssets } from "../api/generations.js";
-import { textResult } from "./format.js";
+import { textResult, jsonResult } from "./format.js";
 
 const EXPORT_URL_CAVEAT =
   "Export URLs expire after about a week and are not tied to your API key - anyone with the link can download the file, so treat it as a secret.";
@@ -24,18 +24,7 @@ export function registerGetGenerationStatusTool(server: McpServer): void {
     async ({ generationId }) => {
       try {
         const result = await getPresentationAssets(generationId, false);
-        return {
-          content: [
-            {
-              type: "resource" as const,
-              resource: {
-                text: JSON.stringify(result),
-                uri: "",
-                mimeType: "application/json",
-              },
-            },
-          ],
-        };
+        return jsonResult(result);
       } catch (err: any) {
         return textResult(`Error fetching generation ${generationId}: ${err?.message || err}`);
       }

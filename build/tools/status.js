@@ -7,7 +7,7 @@
  */
 import { z } from "zod";
 import { getPresentationAssets } from "../api/generations.js";
-import { textResult } from "./format.js";
+import { textResult, jsonResult } from "./format.js";
 const EXPORT_URL_CAVEAT = "Export URLs expire after about a week and are not tied to your API key - anyone with the link can download the file, so treat it as a secret.";
 export function registerGetGenerationStatusTool(server) {
     server.tool("get_generation_status", `Check the status of a generation started by generate, generate_multi_page_gamma or generate_from_template. Returns status, gammaUrl, gammaId, exportUrl and credit usage. Poll until status is completed or failed. ${EXPORT_URL_CAVEAT}`, {
@@ -15,18 +15,7 @@ export function registerGetGenerationStatusTool(server) {
     }, async ({ generationId }) => {
         try {
             const result = await getPresentationAssets(generationId, false);
-            return {
-                content: [
-                    {
-                        type: "resource",
-                        resource: {
-                            text: JSON.stringify(result),
-                            uri: "",
-                            mimeType: "application/json",
-                        },
-                    },
-                ],
-            };
+            return jsonResult(result);
         }
         catch (err) {
             return textResult(`Error fetching generation ${generationId}: ${err?.message || err}`);

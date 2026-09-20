@@ -336,3 +336,143 @@ export interface GammaImageGenerationStatusResponse {
   credits?: GammaCredits;
   savedMediaId?: string;
 }
+
+// --- Management -----------------------------------------------------------
+
+export interface GammaSearchHit {
+  id: string;
+  title?: string;
+  url?: string;
+  highlight?: string;
+  createdBy?: unknown;
+  updatedTime?: string;
+  archived?: boolean;
+}
+
+export interface GammaSearchResponse {
+  hits: GammaSearchHit[];
+}
+
+export interface GammaTemplateSearchHit {
+  id: string;
+  title?: string;
+  url?: string;
+  previewUrl?: string;
+  thumbnailUrl?: string;
+}
+
+export interface GammaTemplateSearchResponse {
+  workspaceTemplates?: GammaTemplateSearchHit[];
+  exploreTemplates?: GammaTemplateSearchHit[];
+  /** True when workspace results fell back to last-edited order. */
+  workspaceDegraded?: boolean;
+}
+
+/** GET /gammas/{gammaId} - metadata only; card content is not exposed. */
+export interface GammaMetadata {
+  id: string;
+  title?: string;
+  type?: "regular" | "template";
+  url?: string;
+  thumbnailUrl?: string | null;
+  description?: string | null;
+  author?: { id?: string; name?: string | null } | null;
+  createdTime?: string | null;
+  updatedTime?: string | null;
+}
+
+export interface GammaCommentItem {
+  id: string;
+  cardId?: string | null;
+  author?: { id?: string; name?: string | null };
+  contentText?: string;
+  status?: "open" | "closed";
+  archived?: boolean;
+  replies?: unknown[];
+  createdTime?: string;
+  updatedTime?: string;
+}
+
+export type GammaExportStatus = "pending" | "completed" | "failed";
+
+export interface GammaExportStatusResponse {
+  exportId: string;
+  status: GammaExportStatus;
+  gammaId: string;
+  exportAs: GammaExportFormat;
+  exportUrl?: string;
+  error?: {
+    message?: string;
+    /** render_timeout | deck_too_large | no_content | export_failed */
+    reason?: string;
+  };
+}
+
+// --- Analytics ------------------------------------------------------------
+
+export interface GammaDailyViews {
+  dayCount?: number;
+  timezone?: string;
+  days?: { date: string; uniqueViewers: number }[];
+}
+
+export interface GammaAnalytics {
+  scope?: string;
+  gammaId: string;
+  totalViews?: number;
+  uniqueViewers?: number;
+  uniqueEditors?: number;
+  cardCount?: number;
+  lastOpened?: string | null;
+  dailyViews?: GammaDailyViews;
+}
+
+export interface GammaCardAnalyticsEntry {
+  cardId: string;
+  cardName?: string | null;
+  cardPosition?: number;
+  viewTimeSeconds?: number;
+  viewersPercent?: number;
+}
+
+export interface GammaCardAnalytics {
+  scope?: string;
+  gammaId: string;
+  uniqueViewers?: number;
+  uniqueEditors?: number;
+  cardCount?: number;
+  cards?: GammaCardAnalyticsEntry[];
+}
+
+export interface GammaViewerEntry {
+  viewerId: string;
+  displayName?: string | null;
+  email?: string | null;
+  lastOpened?: string | null;
+  cardsViewed?: number;
+}
+
+export interface GammaViewerAnalytics {
+  scope?: string;
+  gammaId: string;
+  data?: GammaViewerEntry[];
+  hasMore?: boolean;
+  nextCursor?: string | null;
+}
+
+export interface GammaViewerDetailAnalytics {
+  scope?: string;
+  gammaId: string;
+  userId: string;
+  displayName?: string | null;
+  email?: string | null;
+  lastOpened?: string | null;
+  cardsViewed?: number;
+  cardCount?: number;
+  perCardTimeSpent?: {
+    cardId: string;
+    cardName?: string | null;
+    cardPosition?: number;
+    viewTimePercent?: number;
+  }[];
+}

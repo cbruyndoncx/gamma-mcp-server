@@ -240,21 +240,21 @@ rather than implying full-content reads.
 - [x] **5.2** `get_image_generation_status` — `GET /images/{id}`; returns `image{url,width,height,aspectRatioUsed}`, `warnings[]`, `retryable`, `credits`.
 - [x] **5.3** *(optional)* `archive_image` — `POST /images/media/{savedMediaId}/archive`.
 
-### Phase 6 — Management
+### Phase 6 — Management ✅ **COMPLETE 2026-09-20**
 
-- [ ] **6.1** `get_gammas` — merge `GET /gammas/search` (`q`, `createdBy`, `updatedAfter`, `updatedBefore`, `includeArchived`, `limit`) and `GET /templates/search` (`q`, `limit`) behind one `type: template|regular|all` param, matching the official tool's shape. Handle the documented 403 ("search not enabled for this workspace") with a clear message.
-- [ ] **6.2** `read_gamma` — `GET /gammas/{gammaId}`; accept a file ID *or* a full `gamma.app/docs/...` URL and extract the ID. Tool description must say metadata-only. *(§3.4)*
-- [ ] **6.3** `get_gamma_comments` — `limit`/`after`/`updatedSince`/`includeArchived`, cursor pagination.
-- [ ] **6.4** `export_gamma` + `get_export_status` — `POST /gammas/{gammaId}/export` then `GET /exports/{id}`. Surface the `reason` enum on failure (`render_timeout`, `deck_too_large`, `no_content`, `export_failed`).
-- [ ] **6.5** *(optional)* `archive_gamma`, `delete_gamma`. Delete requires workspace admin — mark destructive and non-idempotent in the tool description.
+- [x] **6.1** `get_gammas` — merge `GET /gammas/search` (`q`, `createdBy`, `updatedAfter`, `updatedBefore`, `includeArchived`, `limit`) and `GET /templates/search` (`q`, `limit`) behind one `type: template|regular|all` param, matching the official tool's shape. Handle the documented 403 ("search not enabled for this workspace") with a clear message.
+- [x] **6.2** `read_gamma` — `GET /gammas/{gammaId}`; accept a file ID *or* a full `gamma.app/docs/...` URL and extract the ID. Tool description must say metadata-only. *(§3.4)*
+- [x] **6.3** `get_gamma_comments` — `limit`/`after`/`updatedSince`/`includeArchived`, cursor pagination.
+- [x] **6.4** `export_gamma` + `get_export_status` — `POST /gammas/{gammaId}/export` then `GET /exports/{id}`. Surface the `reason` enum on failure (`render_timeout`, `deck_too_large`, `no_content`, `export_failed`).
+- [x] **6.5** *(optional)* `archive_gamma`, `delete_gamma`. Delete requires workspace admin — mark destructive and non-idempotent in the tool description.
 
-### Phase 7 — Analytics
+### Phase 7 — Analytics ✅ **COMPLETE 2026-09-20**
 
-- [ ] **7.1** `get_gamma_analytics` — totals plus the 30-day `dailyViews` window.
-- [ ] **7.2** `get_gamma_card_analytics` — per-card `cardName`, `cardPosition`, `viewTimeSeconds`, `viewersPercent`.
-- [ ] **7.3** `get_gamma_viewer_analytics` — paginated, `sortDirection`.
-- [ ] **7.4** `get_gamma_viewer_detail_analytics` — per-viewer `perCardTimeSpent`.
-- [ ] **7.5** Shared: all four need ≥edit permission and return 403 otherwise; data lags ~1 hour. Say both in the tool descriptions.
+- [x] **7.1** `get_gamma_analytics` — totals plus the 30-day `dailyViews` window.
+- [x] **7.2** `get_gamma_card_analytics` — per-card `cardName`, `cardPosition`, `viewTimeSeconds`, `viewersPercent`.
+- [x] **7.3** `get_gamma_viewer_analytics` — paginated, `sortDirection`.
+- [x] **7.4** `get_gamma_viewer_detail_analytics` — per-viewer `perCardTimeSpent`.
+- [x] **7.5** Shared: all four need ≥edit permission and return 403 otherwise; data lags ~1 hour. Say both in the tool descriptions.
 
 ### Phase 8 — Prompts, docs, release
 
@@ -272,6 +272,8 @@ rather than implying full-content reads.
 
 No test suite exists today. Minimum bar before merging:
 
+0. **Parity check** — `node scripts/parity-check.mjs` asserts every tool on Gamma's
+   official MCP server is registered here. Currently: 17/17, plus 6 beyond.
 1. **Schema conformance** — a script that posts each tool's Zod schema shape against the live API with a trivial `inputText`, asserting no 400s. Catches enum drift like D1 directly.
 2. **One live generation per generation tool** — `generate`, `generate_multi_page_gamma`, `generate_from_template`, each polled to `completed`, asserting `gammaUrl` and `credits` are present. These cost credits; keep them behind an opt-in flag.
 3. **Read-only sweep** — `get_themes`, `get_folders`, `get_gammas`, `read_gamma`, and the four analytics tools against a known gamma. Free of charge, safe to run in CI with a key.

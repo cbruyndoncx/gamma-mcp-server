@@ -53,6 +53,31 @@ New parameters on `generate`:
   `get_generation_status` yourself, which matches the official server and avoids
   client-side timeouts on long generations.
 
+### Management and analytics
+
+Completes parity with Gamma's official MCP server — all 17 of its tools are now
+present (`node scripts/parity-check.mjs` asserts this).
+
+- **`get_gammas`** — merges `/gammas/search` and `/templates/search` behind one
+  `type: all | regular | template` parameter. A 403 here means search is not yet
+  enabled for the workspace, not a bad key, and says so.
+- **`read_gamma`** — metadata only. The public REST API exposes no card content,
+  so unlike the official server this cannot return a gamma's text; the tool
+  description says so rather than implying otherwise.
+- **`get_gamma_comments`**, **`export_gamma`** + **`get_export_status`** — the
+  export failure `reason` (`deck_too_large`, `render_timeout`, …) is surfaced with
+  an actionable hint.
+- **`get_gamma_analytics`**, **`get_gamma_card_analytics`**,
+  **`get_gamma_viewer_analytics`**, **`get_gamma_viewer_detail_analytics`** — each
+  states the ~1 hour data lag, and a 403 explains the edit/manage permission split
+  rather than reporting a bare "forbidden".
+- **`archive_gamma`** and **`delete_gamma`** — not on the official server.
+  `delete_gamma` is permanent and admin-only, so it requires an explicit
+  `confirmDelete: true` and its description points at `archive_gamma` first.
+
+IDs are accepted as either a bare file ID or a full `gamma.app/docs/...` URL; the
+ID is extracted, which avoids the documented 403 from passing a URL slug.
+
 ### Standalone images
 
 - **`generate_image`** — one on-brand image from a prompt, with `type`,

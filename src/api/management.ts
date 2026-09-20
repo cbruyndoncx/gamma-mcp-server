@@ -1,0 +1,121 @@
+/**
+ * Gamma management: search, metadata, comments, exports, archive, delete.
+ */
+
+import { apiRequest } from "./client.js";
+import { GAMMA_API_CONFIG } from "../constants.js";
+import type {
+  GammaSearchResponse,
+  GammaTemplateSearchResponse,
+  GammaMetadata,
+  GammaListResponse,
+  GammaCommentItem,
+  GammaExportStatusResponse,
+  GammaExportFormat,
+} from "../types.js";
+
+/**
+ * Accept either a bare file ID or a full Gamma URL.
+ *
+ * The API wants the file ID; a gamma.app/docs/Title-abc123 URL ends in the
+ * doc ID, which the endpoint also resolves. Passing the whole URL 404s.
+ */
+export function resolveGammaId(gammaIdOrUrl: string): string {
+  const trimmed = gammaIdOrUrl.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  try {
+    const { pathname } = new URL(trimmed);
+    const lastSegment = pathname.split("/").filter(Boolean).pop() ?? "";
+    // "My-Deck-g5aykcic8ujm71s" -> "g5aykcic8ujm71s"
+    const idPart = lastSegment.split("-").pop() ?? lastSegment;
+    return idPart || trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
+/** GET /gammas/search */
+export async function searchGammas(params: {
+  q?: string;
+  createdBy?: string;
+  updatedAfter?: string;
+  updatedBefore?: string;
+  includeArchived?: boolean;
+  limit?: number;
+}): Promise<GammaSearchResponse> {
+  return apiRequest<GammaSearchResponse>("/gammas/search", { query: { ...params } });
+}
+
+/** GET /templates/search */
+export async function searchTemplates(params: {
+  q?: string;
+  limit?: number;
+}): Promise<GammaTemplateSearchResponse> {
+  return apiRequest<GammaTemplateSearchResponse>("/templates/search", { query: { ...params } });
+}
+
+/** GET /gammas/{gammaId} - metadata only. */
+export async function getGamma(gammaIdOrUrl: string): Promise<GammaMetadata> {
+  return apiRequest<GammaMetadata>(`/gammas/${resolveGammaId(gammaIdOrUrl)}`);
+}
+
+/** GET /gammas/{gammaId}/comments */
+export async function getGammaComments(
+  gammaIdOrUrl: string,
+  params: { limit?: number; after?: string; updatedSince?: string; includeArchived?: boolean } = {}
+): Promise<GammaListResponse<GammaCommentItem>> {
+  return apiRequest<GammaListResponse<GammaCommentItem>>(
+    `/gammas/${resolveGammaId(gammaIdOrUrl)}/comments`,
+    { query: { ...params } }
+  );
+}
+
+/** POST /gammas/{gammaId}/export */
+export async function createExport(
+  gammaIdOrUrl: string,
+  exportAs: GammaExportFormat
+): Promise<{ exportId: string }> {
+  return apiRequest<{ exportId: string }>(
+    `/gammas/${resolveGammaId(gammaIdOrUrl)}/export`,
+    { method: "POST", body: { exportAs } }
+  );
+}
+
+/** GET /exports/{id} */
+export async function getExportStatus(exportId: string): Promise<GammaExportStatusResponse> {
+  return apiRequest<GammaExportStatusResponse>(`/exports/${exportId}`);
+}
+
+/** Start an export and poll until it finishes. */
+export async function exportAndWait(
+  gammaIdOrUrl: string,
+  exportAs: GammaExportFormat
+): Promise<GammaExportStatusResponse> {
+  const { exportId } = await createExport(gammaIdOrUrl, exportAs);
+  const start = Date.now();
+
+  while (Date.now() - start < GAMMA_API_CONFIG.TIMEOUT_MS) {
+    await new Promise((r) => setTimeout(r, GAMMA_API_CONFIG.POLL_INTERVAL_MS));
+    const status = await getExportStatus(exportId);
+    if (status.status !== "pending") return status;
+  }
+
+  return {
+    exportId,
+    status: "pending",
+    gammaId: resolveGammaId(gammaIdOrUrl),
+    exportAs,
+    error: { message: `Timed out. Poll get_export_status with exportId ${exportId}.` },
+  };
+}
+
+/** POST /gammas/{gammaId}/archive - idempotent. */
+export async function archiveGamma(gammaIdOrUrl: string): Promise<unknown> {
+  return apiRequest<unknown>(`/gammas/${resolveGammaId(gammaIdOrUrl)}/archive`, { method: "POST" });
+}
+
+/** DELETE /gammas/{gammaId} - requires a workspace admin role. */
+export async function deleteGamma(gammaIdOrUrl: string): Promise<unknown> {
+  return apiRequest<unknown>(`/gammas/${resolveGammaId(gammaIdOrUrl)}`, { method: "DELETE" });
+}

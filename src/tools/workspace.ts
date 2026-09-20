@@ -8,23 +8,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { listThemes, listFolders } from "../api/workspace.js";
-import { textResult } from "./format.js";
+import { textResult, jsonResult } from "./format.js";
 import type { GammaThemeType } from "../types.js";
-
-function jsonResult(payload: unknown) {
-  return {
-    content: [
-      {
-        type: "resource" as const,
-        resource: {
-          text: JSON.stringify(payload),
-          uri: "",
-          mimeType: "application/json",
-        },
-      },
-    ],
-  };
-}
 
 export function registerGetThemesTool(server: McpServer): void {
   server.tool(
