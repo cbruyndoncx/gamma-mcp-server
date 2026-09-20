@@ -6,7 +6,7 @@ Run the Gamma MCP Server via `npx` without cloning the repository!
 
 ```bash
 # Basic usage - includes all 11 public prompts automatically
-GAMMA_API_KEY=your_gamma_api_key npx gamma-mcp-server
+GAMMA_API_KEY=your_gamma_api_key npx thirdbrain-gamma-mcp-server
 ```
 
 ## Public Prompts Are Bundled
@@ -55,7 +55,7 @@ EOF
 # Run with both public (from package) + private (yours)
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 **Result:** You get all 11 public prompts + your custom prompts!
@@ -74,7 +74,7 @@ nano ~/.gamma-prompts/business-pitch-deck.json
 # Run - your version overrides the public one
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### Option 3: View All Available Public Prompts
@@ -101,9 +101,9 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "gamma-presentation": {
+    "thirdbrain-gamma": {
       "command": "npx",
-      "args": ["-y", "gamma-mcp-server"],
+      "args": ["-y", "thirdbrain-gamma-mcp-server"],
       "env": {
         "GAMMA_API_KEY": "your_gamma_api_key_here",
         "GAMMA_PROMPTS_PRIVATE_DIR": "/home/user/.gamma-prompts"
@@ -133,10 +133,10 @@ Add to your `claude_desktop_config.json`:
 
 ### Package Structure
 
-When you run `npx gamma-mcp-server`, npm downloads and runs:
+When you run `npx thirdbrain-gamma-mcp-server`, npm downloads and runs:
 
 ```
-node_modules/gamma-mcp-server/
+node_modules/thirdbrain-gamma-mcp-server/
 ├── build/               # Compiled JavaScript
 ├── prompts/
 │   └── public/         # 11 prompts (bundled with package)
@@ -161,7 +161,7 @@ Private prompts override public prompts with the same name.
 
 ```bash
 # Simplest setup - public prompts only
-GAMMA_API_KEY=your_key npx gamma-mcp-server
+GAMMA_API_KEY=your_key npx thirdbrain-gamma-mcp-server
 ```
 
 ### Use Case 2: Public + Your Private Prompts
@@ -170,7 +170,7 @@ GAMMA_API_KEY=your_key npx gamma-mcp-server
 # Best of both worlds
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### Use Case 3: Team Shared + Personal
@@ -180,7 +180,7 @@ npx gamma-mcp-server
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PUBLIC_DIR=/mnt/team-shared-prompts \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.my-gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### Use Case 4: Development with Hot-Reload
@@ -190,7 +190,7 @@ npx gamma-mcp-server
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=~/projects/my-prompts \
 GAMMA_PROMPTS_HOT_RELOAD=true \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### Use Case 5: Production (Stable)
@@ -200,14 +200,14 @@ npx gamma-mcp-server
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=/etc/gamma/prompts \
 GAMMA_PROMPTS_HOT_RELOAD=false \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ## FAQ
 
 ### Q: Do I need to git clone the repo to use it?
 
-**No!** Just run `npx gamma-mcp-server` - all public prompts are included in the npm package.
+**No!** Just run `npx thirdbrain-gamma-mcp-server` - all public prompts are included in the npm package.
 
 ### Q: Can I use my own prompts?
 
@@ -221,11 +221,11 @@ npx gamma-mcp-server
 
 ```bash
 # NPX automatically uses latest, but you can force it:
-npx gamma-mcp-server@latest
+npx thirdbrain-gamma-mcp-server@latest
 
 # Or clear cache:
 npx clear-npx-cache
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### Q: Can I see the public prompts before using them?
@@ -245,7 +245,7 @@ npx gamma-mcp-server
 ```bash
 GAMMA_PROMPTS_PUBLIC_DIR=/mnt/team-prompts \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.my-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ## Troubleshooting
@@ -254,7 +254,7 @@ npx gamma-mcp-server
 
 ```bash
 # Check which directories are being used
-GAMMA_API_KEY=key npx gamma-mcp-server
+GAMMA_API_KEY=key npx thirdbrain-gamma-mcp-server
 # Look for: "Loaded X prompts from: ..."
 
 # Verify your private directory exists
@@ -268,7 +268,7 @@ ls -la $GAMMA_PROMPTS_PRIVATE_DIR
 ls ~/.gamma-prompts/
 
 # Check if public prompts are accessible (when running from package)
-# Public prompts are in: node_modules/gamma-mcp-server/prompts/public/
+# Public prompts are in: node_modules/thirdbrain-gamma-mcp-server/prompts/public/
 ```
 
 ### Issue: Changes not taking effect
@@ -278,7 +278,7 @@ ls ~/.gamma-prompts/
 echo $GAMMA_PROMPTS_HOT_RELOAD  # Should be empty or "true"
 
 # Or explicitly enable it
-GAMMA_PROMPTS_HOT_RELOAD=true npx gamma-mcp-server
+GAMMA_PROMPTS_HOT_RELOAD=true npx thirdbrain-gamma-mcp-server
 ```
 
 ## Next Steps
@@ -299,5 +299,5 @@ GAMMA_PROMPTS_HOT_RELOAD=true npx gamma-mcp-server
 
 **Get started now:**
 ```bash
-GAMMA_API_KEY=your_key npx gamma-mcp-server
+GAMMA_API_KEY=your_key npx thirdbrain-gamma-mcp-server
 ```

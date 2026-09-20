@@ -1,4 +1,4 @@
-# Contributing to Gamma MCP Server
+# Contributing to ThirdBrain Gamma MCP Server
 
 Thank you for your interest in contributing! This guide covers the technical setup and development workflow for contributors.
 
@@ -80,24 +80,47 @@ The `package.json` includes `"type": "module"` for ES Module support.
 gamma-mcp-server/
 ├── src/
 │   ├── index.ts              # Server entry point
-│   ├── constants.ts          # Configuration constants
-│   ├── types.ts              # TypeScript interfaces
-│   ├── gamma-api.ts          # Gamma API client
-│   ├── mcp-tools.ts          # MCP tool definitions
+│   ├── constants.ts          # API config and enum sources of truth
+│   ├── types.ts              # TypeScript interfaces mirroring the v1.0 schema
+│   ├── schemas.ts            # Shared Zod fragments for tool inputs
+│   ├── api/
+│   │   ├── client.ts         # Auth, error mapping, retries, rate limits
+│   │   ├── generations.ts    # POST /generations, from-template, polling
+│   │   ├── images.ts         # POST /images
+│   │   ├── workspace.ts      # /themes, /folders
+│   │   ├── management.ts     # search, metadata, comments, export, archive
+│   │   └── analytics.ts      # /gammas/{id}/analytics/*
+│   ├── tools/
+│   │   ├── index.ts          # registerAllTools
+│   │   ├── generation.ts     # generate, multi-page, from-template
+│   │   ├── status.ts         # get_generation_status, download_export
+│   │   ├── images.ts         # image tools
+│   │   ├── workspace.ts      # get_themes, get_folders
+│   │   ├── management.ts     # gamma management tools
+│   │   ├── analytics.ts      # analytics tools
+│   │   ├── presets.ts        # executive presets (beyond official parity)
+│   │   └── format.ts         # shared result rendering
 │   ├── mcp-prompts.ts        # Prompt registration
 │   └── prompt-loader.ts      # JSON prompt loader with hot-reload
 ├── prompts/
 │   ├── public/               # Public prompt templates (bundled)
-│   │   ├── business-pitch-deck.json
-│   │   ├── product-launch.json
-│   │   └── ... (9 more)
 │   └── private/              # Private prompts (git-ignored)
-│       └── .gitkeep
-├── build/                    # Compiled JavaScript (git-ignored)
+├── scripts/
+│   └── parity-check.mjs      # Asserts parity with Gamma's official MCP server
+├── build/                    # Compiled JavaScript - COMMITTED, see below
 ├── package.json
 ├── tsconfig.json
 └── .env                      # Local config (git-ignored)
 ```
+
+### `build/` is committed
+
+Unlike most TypeScript projects, `build/` is tracked in git. Every commit that
+touches `src/*.ts` must also run `npm run build` and stage the regenerated
+`build/**/*.js`, or anyone installing the package gets stale behaviour.
+
+When you delete or rename a source file, delete its compiled counterpart too —
+`tsc` will not remove orphaned output.
 
 ### Key Files Explained
 
@@ -177,7 +200,7 @@ node build/index.js
    ```json
    {
      "mcpServers": {
-       "gamma-presentation-dev": {
+       "thirdbrain-gamma-dev": {
          "command": "node",
          "args": ["build/index.js"],
          "cwd": "/absolute/path/to/your/gamma-mcp-server",
@@ -339,7 +362,7 @@ npm publish
 
 Users can then run:
 ```bash
-npx gamma-mcp-server@latest
+npx thirdbrain-gamma-mcp-server@latest
 ```
 
 ## Contribution Guidelines

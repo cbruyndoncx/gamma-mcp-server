@@ -3,10 +3,26 @@
  */
 
 export const GAMMA_API_CONFIG = {
-  BASE_URL: "https://public-api.gamma.app/v1.0/generations",
+  /** API root. Endpoint paths are appended to this. */
+  BASE_URL: "https://public-api.gamma.app/v1.0",
   API_KEY_HEADER: "X-API-KEY",
-  TIMEOUT_MS: 10 * 60_000, // 10 minutes total timeout for generation
-  POLL_INTERVAL_MS: 30_000, // 30 seconds between polls
+  TIMEOUT_MS: 5 * 60_000, // 5 minutes; Gamma documents 1-3 minutes as typical
+  POLL_INTERVAL_MS: 5_000, // 5 seconds, per Gamma's documented polling cadence
+} as const;
+
+/**
+ * Rate limiting. Every response carries x-ratelimit-* headers; when burst
+ * capacity runs low we slow polling down rather than waiting for a 429.
+ */
+export const GAMMA_RATE_LIMIT = {
+  /** Below this many burst requests remaining, back off. */
+  BURST_LOW_WATER: 100,
+  /** Multiplier applied to the poll interval when running low. */
+  BACKOFF_FACTOR: 3,
+  /** Documented pause after a 429 before the first retry. */
+  RETRY_AFTER_429_MS: 30_000,
+  /** Maximum retries for a transient failure (429, 500, 502). */
+  MAX_RETRIES: 3,
 } as const;
 
 export const GAMMA_API_DEFAULTS = {
@@ -17,7 +33,8 @@ export const GAMMA_API_DEFAULTS = {
 export const GAMMA_TEXT_MODES = ["generate", "condense", "preserve"] as const;
 export const GAMMA_TEXT_AMOUNTS = ["brief", "medium", "detailed", "extensive"] as const;
 export const GAMMA_FORMATS = ["presentation", "document", "social", "webpage"] as const;
-export const GAMMA_EXPORT_FORMATS = ["pdf", "pptx"] as const;
+/** `png` returns a .zip containing one PNG per card, not a single image file. */
+export const GAMMA_EXPORT_FORMATS = ["pdf", "pptx", "png"] as const;
 export const GAMMA_CARD_SPLIT = ["auto", "inputTextBreaks"] as const;
 
 /**
@@ -26,11 +43,12 @@ export const GAMMA_CARD_SPLIT = ["auto", "inputTextBreaks"] as const;
 export const GAMMA_IMAGE_SOURCES = [
   "aiGenerated",
   "pictographic",
-  "unsplash",
+  "pexels", // replaced "unsplash", which the v1.0 API now rejects with a 400
   "giphy",
   "webAllImages",
   "webFreeToUse",
   "webFreeToUseCommercially",
+  "themeAccent",
   "placeholder",
   "noImages",
 ] as const;
@@ -71,12 +89,54 @@ export const GAMMA_HEADER_FOOTER_IMAGE_SOURCES = ["themeLogo", "custom"] as cons
  */
 export const GAMMA_HEADER_FOOTER_SIZES = ["sm", "md", "lg", "xl"] as const;
 
+/** Visual styles for standalone image generation (POST /images). */
+export const GAMMA_IMAGE_TYPES = ["illustration", "scene", "photo", "abstract"] as const;
+
+/** Aspect-ratio presets for standalone image generation. Pixels are model-chosen. */
+export const GAMMA_IMAGE_SIZE_PRESETS = [
+  "social-square",
+  "social-portrait",
+  "story",
+  "banner",
+  "slide",
+] as const;
+
+/**
+ * Art style presets.
+ *
+ * Gamma's official MCP server exposes these as `imageOptions.stylePreset`, but
+ * the REST API has no such field - it is a convenience layer in their server.
+ * We match the interface and fold the preset into `imageOptions.style`.
+ */
+export const GAMMA_IMAGE_STYLE_PRESETS = [
+  "photorealistic",
+  "illustration",
+  "abstract",
+  "3D",
+  "lineArt",
+  "custom",
+] as const;
+
+/**
+ * Sharing access levels. `fullAccess` is workspace-members-only.
+ */
+export const GAMMA_SHARING_WORKSPACE_ACCESS = [
+  "noAccess",
+  "view",
+  "comment",
+  "edit",
+  "fullAccess",
+] as const;
+export const GAMMA_SHARING_EXTERNAL_ACCESS = ["noAccess", "view", "comment", "edit"] as const;
+export const GAMMA_SHARING_EMAIL_ACCESS = ["view", "comment", "edit", "fullAccess"] as const;
+
 export const GENERATION_STATUS = {
-  COMPLETED: ["completed", "succeeded"],
-  FAILED: ["failed", "error"],
+  PENDING: "pending",
+  COMPLETED: "completed",
+  FAILED: "failed",
 } as const;
 
-export const DOWNLOAD_PATH = "/tmp";
+export const DOWNLOAD_PATH = process.env.GAMMA_DOWNLOAD_DIR || "/tmp";
 
 /**
  * Prompt directory paths - configurable via environment variables

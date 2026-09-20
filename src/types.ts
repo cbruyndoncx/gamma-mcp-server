@@ -12,6 +12,12 @@ import type {
   GAMMA_HEADER_FOOTER_TYPES,
   GAMMA_HEADER_FOOTER_IMAGE_SOURCES,
   GAMMA_HEADER_FOOTER_SIZES,
+  GAMMA_IMAGE_STYLE_PRESETS,
+  GAMMA_IMAGE_TYPES,
+  GAMMA_IMAGE_SIZE_PRESETS,
+  GAMMA_SHARING_WORKSPACE_ACCESS,
+  GAMMA_SHARING_EXTERNAL_ACCESS,
+  GAMMA_SHARING_EMAIL_ACCESS,
 } from "./constants.js";
 
 export type GammaTextMode = (typeof GAMMA_TEXT_MODES)[number];
@@ -37,6 +43,13 @@ export interface GammaImageOptions {
   style?: string;
 }
 
+export type GammaImageStylePreset = (typeof GAMMA_IMAGE_STYLE_PRESETS)[number];
+
+/** What the tool layer accepts, before `stylePreset` is folded into `style`. */
+export interface GammaImageOptionsInput extends GammaImageOptions {
+  stylePreset?: GammaImageStylePreset;
+}
+
 export interface GammaHeaderFooterElement {
   type: GammaHeaderFooterType;
   value?: string; // For type="text": the text content
@@ -56,6 +69,21 @@ export interface GammaHeaderFooter {
   hideFromLastCard?: boolean;
 }
 
+export type GammaSharingWorkspaceAccess = (typeof GAMMA_SHARING_WORKSPACE_ACCESS)[number];
+export type GammaSharingExternalAccess = (typeof GAMMA_SHARING_EXTERNAL_ACCESS)[number];
+export type GammaSharingEmailAccess = (typeof GAMMA_SHARING_EMAIL_ACCESS)[number];
+
+export interface GammaEmailOptions {
+  recipients: string[];
+  access?: GammaSharingEmailAccess;
+}
+
+export interface GammaSharingOptions {
+  workspaceAccess?: GammaSharingWorkspaceAccess;
+  externalAccess?: GammaSharingExternalAccess;
+  emailOptions?: GammaEmailOptions;
+}
+
 export interface GammaCardOptions {
   dimensions?: string;
   headerFooter?: GammaHeaderFooter;
@@ -63,21 +91,83 @@ export interface GammaCardOptions {
 
 export interface GammaGenerationParams {
   inputText: string;
+  title?: string;
   format?: GammaFormat;
   textMode?: GammaTextMode;
   numCards?: number;
   exportAs?: GammaExportFormat;
   additionalInstructions?: string;
   textOptions?: GammaTextOptions;
-  imageOptions?: GammaImageOptions;
+  imageOptions?: GammaImageOptionsInput;
   cardOptions?: GammaCardOptions;
+  sharingOptions?: GammaSharingOptions;
   folderIds?: string[];
   cardSplit?: GammaCardSplit;
   themeId?: string;
 }
 
-export interface GammaAPIRequestBody {
+/** One page of a multi-page File. */
+export interface GammaPageParams {
   inputText: string;
+  title?: string;
+  /** URL slug within a published site. Honored for pages 2..N only. */
+  path?: string;
+  additionalInstructions?: string;
+  textMode?: GammaTextMode;
+  format?: GammaFormat;
+  numCards?: number;
+  cardSplit?: GammaCardSplit;
+  textOptions?: GammaTextOptions;
+  imageOptions?: GammaImageOptionsInput;
+}
+
+/**
+ * A multi-page File. `pages` takes precedence over the top-level per-page
+ * fields; file-level options still apply to every page.
+ */
+export interface GammaMultiPageParams {
+  pages: GammaPageParams[];
+  title?: string;
+  publish?: boolean;
+  themeId?: string;
+  folderIds?: string[];
+  cardOptions?: GammaCardOptions;
+  sharingOptions?: GammaSharingOptions;
+  exportAs?: GammaExportFormat;
+}
+
+/** POST /generations/from-template */
+export interface GammaFromTemplateParams {
+  gammaId: string;
+  prompt: string;
+  title?: string;
+  themeId?: string;
+  /** Templates accept only model and style, not source. */
+  imageOptions?: { model?: string; style?: string };
+  sharingOptions?: GammaSharingOptions;
+  folderIds?: string[];
+  exportAs?: GammaExportFormat;
+}
+
+export interface GammaPageRequestBody {
+  inputText: string;
+  title?: string;
+  path?: string;
+  additionalInstructions?: string;
+  textMode?: string;
+  format?: string;
+  numCards?: number;
+  cardSplit?: string;
+  textOptions?: GammaTextOptions;
+  imageOptions?: GammaImageOptions;
+}
+
+export interface GammaAPIRequestBody {
+  /** Required unless `pages` is supplied. */
+  inputText?: string;
+  pages?: GammaPageRequestBody[];
+  publish?: boolean;
+  title?: string;
   format?: string;
   textMode?: string;
   numCards?: number;
@@ -86,47 +176,303 @@ export interface GammaAPIRequestBody {
   textOptions?: GammaTextOptions;
   imageOptions?: GammaImageOptions;
   cardOptions?: GammaCardOptions;
+  sharingOptions?: GammaSharingOptions;
   folderIds?: string[];
   cardSplit?: string;
   themeId?: string;
 }
 
+/** Credit accounting returned on a completed or failed generation. */
+export interface GammaCredits {
+  deducted: number;
+  remaining: number;
+}
+
+/** Error envelope used across the v1.0 API. */
+export interface GammaErrorResponse {
+  message: string;
+  statusCode: number;
+}
+
+/** Response to POST /v1.0/generations. Carries no URLs - those come from polling. */
+export interface GammaCreateGenerationResponse {
+  generationId: string;
+  /** File-level warnings about ignored or adjusted options. */
+  warnings?: string;
+  /** Per-page warnings, index-aligned with the `pages` request array. */
+  pageWarnings?: (string | null)[];
+}
+
+/** One page's result within a multi-page generation. */
+export interface GammaPageGenerationResult {
+  gammaId: string;
+  gammaUrl: string;
+  status: GammaGenerationStatus;
+  error?: GammaErrorResponse;
+  exportUrl?: string;
+}
+
+export type GammaGenerationStatus = "pending" | "completed" | "failed";
+
+/** Response to GET /v1.0/generations/{id}. */
+export interface GammaGenerationStatusResponse {
+  generationId: string;
+  status: GammaGenerationStatus;
+  gammaId?: string;
+  gammaUrl?: string;
+  /**
+   * Download URL for the export, when `exportAs` was set. Expires after about a
+   * week and is NOT tied to the API key - anyone with the link can download it.
+   * Treat as a secret: do not log it.
+   */
+  exportUrl?: string;
+  error?: GammaErrorResponse;
+  credits?: GammaCredits;
+  pages?: GammaPageGenerationResult[];
+}
+
+/** Normalized result this server hands back to its tools. */
 export interface GammaGenerationResult {
   url: string | null;
+  /** null when the request never reached the API. */
+  status: GammaGenerationStatus | null;
   generationId: string | null;
+  gammaId: string | null;
+  exportUrl: string | null;
+  credits: GammaCredits | null;
+  warnings: string | null;
   error: string | null;
 }
 
-export interface GammaAPIResponse {
-  generationId?: string;
-  generation_id?: string;
-  id?: string;
-  gammaUrl?: string;
-  url?: string;
-  exportUrl?: string;
-  export_url?: string;
-  outputUrl?: string;
-  output_url?: string;
-  gamma_url?: string;
-  pdfUrl?: string;
-  pptxUrl?: string;
-  status?: string;
-  state?: string;
-  outputs?: Array<{ url?: string }>;
-  exports?: Array<{ url?: string } | string>;
-  artifacts?: Array<{ url?: string }>;
-}
-
 export interface GammaAssetDownloads {
-  pdf?: string;
-  pdf_error?: string;
-  pptx?: string;
-  pptx_error?: string;
+  path?: string;
+  error?: string;
 }
 
 export interface GammaAssets {
   generationId: string;
-  pdf?: string;
-  pptx?: string;
-  downloads?: GammaAssetDownloads;
+  status: GammaGenerationStatus;
+  gammaId?: string;
+  gammaUrl?: string;
+  /** Single export URL - the API permits only one `exportAs` per generation. */
+  exportUrl?: string;
+  /** Format inferred from the export URL, for convenience. */
+  exportFormat?: string;
+  credits?: GammaCredits;
+  download?: GammaAssetDownloads;
+}
+
+/**
+ * Cursor-paginated list envelope. The API returns the items under `data`;
+ * the tool layer renames it to something meaningful per endpoint.
+ */
+export interface GammaListResponse<T> {
+  data: T[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
+export type GammaThemeType = "standard" | "custom";
+
+export interface GammaThemeItem {
+  id: string;
+  name: string;
+  type: GammaThemeType;
+  colorKeywords?: string[];
+  toneKeywords?: string[];
+}
+
+export interface GammaFolderItem {
+  id: string;
+  name: string;
+}
+
+export type GammaImageType = (typeof GAMMA_IMAGE_TYPES)[number];
+export type GammaImageSizePreset = (typeof GAMMA_IMAGE_SIZE_PRESETS)[number];
+
+/** A reference image whose subject should appear in the result. */
+export interface GammaReferenceImage {
+  /** Must be https://. Gamma fetches, validates and re-hosts it. */
+  url: string;
+  role?: "subject";
+}
+
+export interface GammaImageGenerationParams {
+  prompt: string;
+  type?: GammaImageType;
+  sizePreset?: GammaImageSizePreset;
+  themeId?: string;
+  referenceImages?: GammaReferenceImage[];
+}
+
+export interface GammaImageGenerationWarning {
+  code: string;
+  message: string;
+}
+
+export interface GammaCreateImageGenerationResponse {
+  imageGenerationId: string;
+  warnings?: GammaImageGenerationWarning[];
+}
+
+export interface GammaGeneratedImage {
+  url: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  mimeType?: string;
+  transparency?: boolean;
+  aspectRatioUsed?: string;
+}
+
+export interface GammaImageGenerationStatusResponse {
+  imageGenerationId: string;
+  status: GammaGenerationStatus;
+  image?: GammaGeneratedImage;
+  warnings?: GammaImageGenerationWarning[];
+  error?: GammaErrorResponse | string;
+  /** Present on failure: whether retrying the same request could succeed. */
+  retryable?: boolean;
+  credits?: GammaCredits;
+  savedMediaId?: string;
+}
+
+// --- Management -----------------------------------------------------------
+
+export interface GammaSearchHit {
+  id: string;
+  title?: string;
+  url?: string;
+  highlight?: string;
+  createdBy?: unknown;
+  updatedTime?: string;
+  archived?: boolean;
+}
+
+export interface GammaSearchResponse {
+  hits: GammaSearchHit[];
+}
+
+export interface GammaTemplateSearchHit {
+  id: string;
+  title?: string;
+  url?: string;
+  previewUrl?: string;
+  thumbnailUrl?: string;
+}
+
+export interface GammaTemplateSearchResponse {
+  workspaceTemplates?: GammaTemplateSearchHit[];
+  exploreTemplates?: GammaTemplateSearchHit[];
+  /** True when workspace results fell back to last-edited order. */
+  workspaceDegraded?: boolean;
+}
+
+/** GET /gammas/{gammaId} - metadata only; card content is not exposed. */
+export interface GammaMetadata {
+  id: string;
+  title?: string;
+  type?: "regular" | "template";
+  url?: string;
+  thumbnailUrl?: string | null;
+  description?: string | null;
+  author?: { id?: string; name?: string | null } | null;
+  createdTime?: string | null;
+  updatedTime?: string | null;
+}
+
+export interface GammaCommentItem {
+  id: string;
+  cardId?: string | null;
+  author?: { id?: string; name?: string | null };
+  contentText?: string;
+  status?: "open" | "closed";
+  archived?: boolean;
+  replies?: unknown[];
+  createdTime?: string;
+  updatedTime?: string;
+}
+
+export type GammaExportStatus = "pending" | "completed" | "failed";
+
+export interface GammaExportStatusResponse {
+  exportId: string;
+  status: GammaExportStatus;
+  gammaId: string;
+  exportAs: GammaExportFormat;
+  exportUrl?: string;
+  error?: {
+    message?: string;
+    /** render_timeout | deck_too_large | no_content | export_failed */
+    reason?: string;
+  };
+}
+
+// --- Analytics ------------------------------------------------------------
+
+export interface GammaDailyViews {
+  dayCount?: number;
+  timezone?: string;
+  days?: { date: string; uniqueViewers: number }[];
+}
+
+export interface GammaAnalytics {
+  scope?: string;
+  gammaId: string;
+  totalViews?: number;
+  uniqueViewers?: number;
+  uniqueEditors?: number;
+  cardCount?: number;
+  lastOpened?: string | null;
+  dailyViews?: GammaDailyViews;
+}
+
+export interface GammaCardAnalyticsEntry {
+  cardId: string;
+  cardName?: string | null;
+  cardPosition?: number;
+  viewTimeSeconds?: number;
+  viewersPercent?: number;
+}
+
+export interface GammaCardAnalytics {
+  scope?: string;
+  gammaId: string;
+  uniqueViewers?: number;
+  uniqueEditors?: number;
+  cardCount?: number;
+  cards?: GammaCardAnalyticsEntry[];
+}
+
+export interface GammaViewerEntry {
+  viewerId: string;
+  displayName?: string | null;
+  email?: string | null;
+  lastOpened?: string | null;
+  cardsViewed?: number;
+}
+
+export interface GammaViewerAnalytics {
+  scope?: string;
+  gammaId: string;
+  data?: GammaViewerEntry[];
+  hasMore?: boolean;
+  nextCursor?: string | null;
+}
+
+export interface GammaViewerDetailAnalytics {
+  scope?: string;
+  gammaId: string;
+  userId: string;
+  displayName?: string | null;
+  email?: string | null;
+  lastOpened?: string | null;
+  cardsViewed?: number;
+  cardCount?: number;
+  perCardTimeSpent?: {
+    cardId: string;
+    cardName?: string | null;
+    cardPosition?: number;
+    viewTimePercent?: number;
+  }[];
 }

@@ -1,8 +1,10 @@
 {
+  "name": "thirdbrain-gamma-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for generating presentations, documents and reports with the Gamma API, with JSON-defined prompt templates and hot-reload.",
   "type": "module",
-  "name": "gamma-mcp-server",
   "bin": {
-    "gamma-mcp-server": "./build/index.js"
+    "thirdbrain-gamma-mcp-server": "./build/index.js"
   },
   "scripts": {
     "build": "tsc && chmod 755 build/index.js"
@@ -16,5 +18,13 @@
     "dotenv": "^16.5.0",
     "node-fetch": "^3.3.2",
     "zod": "^3.24.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cbruyndoncx/gamma-mcp-server.git"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^5.9.3"
   }
 }

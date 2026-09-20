@@ -1,5 +1,150 @@
 # Changelog
 
+## Unreleased
+
+### Renamed to ThirdBrain Gamma MCP Server
+
+- npm package is now `thirdbrain-gamma-mcp-server` (npm forbids capitals in new
+  package names, so the display name "ThirdBrain Gamma MCP Server" is prose only).
+- MCP server identity is now `thirdbrain-gamma`, renamed from `gamma-presentation`
+  so it does not collide with Gamma's official MCP server in the same client.
+- The GitHub repository is still `cbruyndoncx/gamma-mcp-server`; clone URLs and
+  `cd gamma-mcp-server` in the docs are unchanged.
+- `package.json` gained the `version` and `description` fields it was missing, and
+  `typescript` / `@types/node` moved into `devDependencies` — `npm run build`
+  previously failed on any clean clone.
+
+### Tool names now match Gamma's official MCP server
+
+Tools that do the same job as a tool on Gamma's official MCP server now carry the
+same name, so instructions written against that server work here unchanged.
+
+| Before | After |
+|---|---|
+| `generate-presentation` | `generate` |
+| `get-presentation-assets` | `get_generation_status` (+ `download_export`) |
+| `generate-executive-presentation` | `generate_executive_presentation` |
+| `generate-executive-report` | `generate_executive_report` |
+
+**This is a breaking change** and there is no alias layer — the old names are gone.
+All 11 templates in `prompts/public/` were updated; update your own MCP client
+configs and any `prompts/private/*.json` that name a tool.
+
+New tools:
+
+- **`generate_multi_page_gamma`** — one Gamma with up to 50 distinct pages under a
+  single URL, each with its own deep link, optionally published as a site.
+- **`generate_from_template`** — `POST /generations/from-template`, for adapting an
+  existing gamma.
+- **`download_export`** — split out of the old assets tool. Writes to
+  `GAMMA_DOWNLOAD_DIR`.
+
+New parameters on `generate`:
+
+- **`title`** (1–500) — set the title instead of having it inferred.
+- **`sharingOptions`** — `workspaceAccess`, `externalAccess`, and `emailOptions`
+  for sharing with named recipients.
+- **`imageOptions.stylePreset`** — `photorealistic`, `illustration`, `abstract`,
+  `3D`, `lineArt`, `custom`. The REST API has no such field; it is a convenience
+  layer in Gamma's own server, so we fold it into `style` (combining the two when
+  both are given rather than discarding either).
+- **`waitForCompletion`** — defaults to `true`, preserving the blocking behaviour.
+  Set `false` to get a `generationId` back immediately and poll
+  `get_generation_status` yourself, which matches the official server and avoids
+  client-side timeouts on long generations.
+
+### Management and analytics
+
+Completes parity with Gamma's official MCP server — all 17 of its tools are now
+present (`node scripts/parity-check.mjs` asserts this).
+
+- **`get_gammas`** — merges `/gammas/search` and `/templates/search` behind one
+  `type: all | regular | template` parameter. A 403 here means search is not yet
+  enabled for the workspace, not a bad key, and says so.
+- **`read_gamma`** — metadata only. The public REST API exposes no card content,
+  so unlike the official server this cannot return a gamma's text; the tool
+  description says so rather than implying otherwise.
+- **`get_gamma_comments`**, **`export_gamma`** + **`get_export_status`** — the
+  export failure `reason` (`deck_too_large`, `render_timeout`, …) is surfaced with
+  an actionable hint.
+- **`get_gamma_analytics`**, **`get_gamma_card_analytics`**,
+  **`get_gamma_viewer_analytics`**, **`get_gamma_viewer_detail_analytics`** — each
+  states the ~1 hour data lag, and a 403 explains the edit/manage permission split
+  rather than reporting a bare "forbidden".
+- **`archive_gamma`** and **`delete_gamma`** — not on the official server.
+  `delete_gamma` is permanent and admin-only, so it requires an explicit
+  `confirmDelete: true` and its description points at `archive_gamma` first.
+
+IDs are accepted as either a bare file ID or a full `gamma.app/docs/...` URL; the
+ID is extracted, which avoids the documented 403 from passing a URL slug.
+
+### Standalone images
+
+- **`generate_image`** — one on-brand image from a prompt, with `type`,
+  `sizePreset`, `themeId` and up to 4 `referenceImages` (subject transfer). Blocks
+  until ready.
+- **`get_image_generation_status`** — poll an image job; reports `retryable` so a
+  caller knows whether a retry is pointless.
+- **`archive_image`** — media library cleanup. Not on the official server.
+
+Request-time warnings are carried forward into the status result, since the API
+reports them on create but not on subsequent polls.
+
+### Workspace discovery
+
+- **`get_themes`** and **`get_folders`** — look a theme or folder up by name
+  instead of copying its ID out of the Gamma app. Both support the REST
+  endpoint's cursor pagination; `get_themes` also filters to `standard` or
+  `custom`. Parameter names follow the official server (`name` for the search
+  term).
+
+### Internal restructure
+
+- `gamma-api.ts` split into `src/api/client.ts` (auth, error mapping, retries,
+  rate-limit accounting) and `src/api/generations.ts`.
+- `mcp-tools.ts` split into `src/tools/{generation,presets,assets,format,index}.ts`.
+- New `src/schemas.ts` holds the shared Zod fragments. The header/footer slot schema
+  was previously copy-pasted six times; it is now defined once and gained the
+  500-character bound on `value` that the API enforces but the old schema did not.
+- **Rate-limit-aware polling.** The client reads `x-ratelimit-remaining-burst` and
+  slows down before hitting a 429 rather than after. Transient failures (429, 5xx)
+  retry with backoff, honouring `Retry-After` when present.
+- `BASE_URL` is now the API root, so non-generation endpoints can be built from it.
+- API errors now carry an actionable hint per status code (401 points at the
+  `sk-gamma-` prefix and the `X-API-KEY` header, 402 at billing, 404 at the `g_`
+  file-ID-versus-URL-slug confusion).
+
+### Gamma v1.0 API correctness pass
+
+- **`unsplash` removed from `imageOptions.source`.** The v1.0 API rejects it with a
+  400. Replaced by `pexels`; `themeAccent` added.
+- **Polling now runs at 5s** (was 30s) with a 5-minute ceiling, matching Gamma's
+  documented cadence.
+- **`png` added to `exportAs`.** It returns a .zip with one PNG per card.
+- **Warnings are surfaced.** `warnings` and `pageWarnings` from the create response
+  are now shown — this is how Gamma reports a parameter it silently ignored.
+- **Credits are surfaced.** `credits.deducted` / `credits.remaining` appear on every
+  generation result.
+- **Export URLs are labelled as secrets** and no longer written to the server log.
+  They are unauthenticated and expire after about a week.
+- **Dead response handling removed.** The client no longer probes `pdfUrl`,
+  `pptxUrl`, `exports[]`, `outputs[]`, `artifacts[]` or snake_case aliases; none
+  exist in v1.0. API errors now report Gamma's own `{ message, statusCode }`.
+- **`get-presentation-assets` returns a single `exportUrl`**, since the API permits
+  only one `exportAs` per generation. It can no longer claim to return both a PDF
+  and a PPTX.
+- **Schema bounds added** to match the API: `inputText` ≤400,000,
+  `additionalInstructions` ≤5,000, `tone`/`audience` ≤500, `style` ≤5,000,
+  `folderIds` at most 1 item.
+- **`numCards` rounding removed** from `generate-executive-report`. The API
+  documents a plain 1–75 integer; the previous multiple-of-5 stepping is not in the
+  current spec. See the `TODO(verify)` in `src/mcp-tools.ts` — this needs one live
+  confirmation call.
+- **`GAMMA_DOWNLOAD_DIR`** replaces the hardcoded `/tmp` download path.
+
+See [docs/API_UPDATE_PLAN.md](docs/API_UPDATE_PLAN.md) for the full plan, including
+the remaining phases and the tool-name parity table against Gamma's official MCP server.
+
 ## Recent Major Changes
 
 ### JSON-Based Prompt System (Current)
@@ -18,7 +163,7 @@
 
 1. **Runtime Configuration**
    ```bash
-   GAMMA_PROMPTS_PRIVATE_DIR=~/my-prompts npx gamma-mcp-server
+   GAMMA_PROMPTS_PRIVATE_DIR=~/my-prompts npx thirdbrain-gamma-mcp-server
    ```
 
 2. **Hot-Reload (Enabled by Default)**
