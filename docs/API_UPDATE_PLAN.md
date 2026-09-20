@@ -234,11 +234,11 @@ rather than implying full-content reads.
 - [x] **4.2** `get_folders` — `GET /folders`, params `query`/`limit`/`after`.
 - [x] **4.3** Remove the hardcoded workspace theme ID from the `generate-executive-presentation` comment now that themes are discoverable.
 
-### Phase 5 — Images
+### Phase 5 — Images ✅ **COMPLETE 2026-09-20**
 
-- [ ] **5.1** `generate_image` — `POST /images`; `prompt` (≤5000), `type` (`illustration`|`scene`|`photo`|`abstract`), `sizePreset` (`social-square`|`social-portrait`|`story`|`banner`|`slide`), `themeId`, `referenceImages[]` (≤4, `https://` URLs, `role: "subject"`).
-- [ ] **5.2** `get_image_generation_status` — `GET /images/{id}`; returns `image{url,width,height,aspectRatioUsed}`, `warnings[]`, `retryable`, `credits`.
-- [ ] **5.3** *(optional)* `archive_image` — `POST /images/media/{savedMediaId}/archive`.
+- [x] **5.1** `generate_image` — `POST /images`; `prompt` (≤5000), `type` (`illustration`|`scene`|`photo`|`abstract`), `sizePreset` (`social-square`|`social-portrait`|`story`|`banner`|`slide`), `themeId`, `referenceImages[]` (≤4, `https://` URLs, `role: "subject"`).
+- [x] **5.2** `get_image_generation_status` — `GET /images/{id}`; returns `image{url,width,height,aspectRatioUsed}`, `warnings[]`, `retryable`, `credits`.
+- [x] **5.3** *(optional)* `archive_image` — `POST /images/media/{savedMediaId}/archive`.
 
 ### Phase 6 — Management
 

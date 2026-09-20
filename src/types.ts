@@ -13,6 +13,8 @@ import type {
   GAMMA_HEADER_FOOTER_IMAGE_SOURCES,
   GAMMA_HEADER_FOOTER_SIZES,
   GAMMA_IMAGE_STYLE_PRESETS,
+  GAMMA_IMAGE_TYPES,
+  GAMMA_IMAGE_SIZE_PRESETS,
   GAMMA_SHARING_WORKSPACE_ACCESS,
   GAMMA_SHARING_EXTERNAL_ACCESS,
   GAMMA_SHARING_EMAIL_ACCESS,
@@ -283,4 +285,54 @@ export interface GammaThemeItem {
 export interface GammaFolderItem {
   id: string;
   name: string;
+}
+
+export type GammaImageType = (typeof GAMMA_IMAGE_TYPES)[number];
+export type GammaImageSizePreset = (typeof GAMMA_IMAGE_SIZE_PRESETS)[number];
+
+/** A reference image whose subject should appear in the result. */
+export interface GammaReferenceImage {
+  /** Must be https://. Gamma fetches, validates and re-hosts it. */
+  url: string;
+  role?: "subject";
+}
+
+export interface GammaImageGenerationParams {
+  prompt: string;
+  type?: GammaImageType;
+  sizePreset?: GammaImageSizePreset;
+  themeId?: string;
+  referenceImages?: GammaReferenceImage[];
+}
+
+export interface GammaImageGenerationWarning {
+  code: string;
+  message: string;
+}
+
+export interface GammaCreateImageGenerationResponse {
+  imageGenerationId: string;
+  warnings?: GammaImageGenerationWarning[];
+}
+
+export interface GammaGeneratedImage {
+  url: string;
+  width?: number;
+  height?: number;
+  format?: string;
+  mimeType?: string;
+  transparency?: boolean;
+  aspectRatioUsed?: string;
+}
+
+export interface GammaImageGenerationStatusResponse {
+  imageGenerationId: string;
+  status: GammaGenerationStatus;
+  image?: GammaGeneratedImage;
+  warnings?: GammaImageGenerationWarning[];
+  error?: GammaErrorResponse | string;
+  /** Present on failure: whether retrying the same request could succeed. */
+  retryable?: boolean;
+  credits?: GammaCredits;
+  savedMediaId?: string;
 }

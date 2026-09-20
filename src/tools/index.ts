@@ -19,6 +19,11 @@ import {
   registerDownloadExportTool,
 } from "./status.js";
 import { registerGetThemesTool, registerGetFoldersTool } from "./workspace.js";
+import {
+  registerGenerateImageTool,
+  registerGetImageGenerationStatusTool,
+  registerArchiveImageTool,
+} from "./images.js";
 
 export function registerAllTools(server: McpServer): void {
   // Generation
@@ -29,6 +34,11 @@ export function registerAllTools(server: McpServer): void {
   // Status and exports
   registerGetGenerationStatusTool(server);
   registerDownloadExportTool(server);
+
+  // Images
+  registerGenerateImageTool(server);
+  registerGetImageGenerationStatusTool(server);
+  registerArchiveImageTool(server);
 
   // Workspace discovery
   registerGetThemesTool(server);

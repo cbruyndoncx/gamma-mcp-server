@@ -53,6 +53,18 @@ New parameters on `generate`:
   `get_generation_status` yourself, which matches the official server and avoids
   client-side timeouts on long generations.
 
+### Standalone images
+
+- **`generate_image`** — one on-brand image from a prompt, with `type`,
+  `sizePreset`, `themeId` and up to 4 `referenceImages` (subject transfer). Blocks
+  until ready.
+- **`get_image_generation_status`** — poll an image job; reports `retryable` so a
+  caller knows whether a retry is pointless.
+- **`archive_image`** — media library cleanup. Not on the official server.
+
+Request-time warnings are carried forward into the status result, since the API
+reports them on create but not on subsequent polls.
+
 ### Workspace discovery
 
 - **`get_themes`** and **`get_folders`** — look a theme or folder up by name

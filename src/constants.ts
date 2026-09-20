@@ -89,6 +89,18 @@ export const GAMMA_HEADER_FOOTER_IMAGE_SOURCES = ["themeLogo", "custom"] as cons
  */
 export const GAMMA_HEADER_FOOTER_SIZES = ["sm", "md", "lg", "xl"] as const;
 
+/** Visual styles for standalone image generation (POST /images). */
+export const GAMMA_IMAGE_TYPES = ["illustration", "scene", "photo", "abstract"] as const;
+
+/** Aspect-ratio presets for standalone image generation. Pixels are model-chosen. */
+export const GAMMA_IMAGE_SIZE_PRESETS = [
+  "social-square",
+  "social-portrait",
+  "story",
+  "banner",
+  "slide",
+] as const;
+
 /**
  * Art style presets.
  *

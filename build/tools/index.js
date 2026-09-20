@@ -7,6 +7,7 @@ import { registerGenerateTool, registerGenerateMultiPageTool, registerGenerateFr
 import { registerGenerateExecutivePresentationTool, registerGenerateExecutiveReportTool, } from "./presets.js";
 import { registerGetGenerationStatusTool, registerDownloadExportTool, } from "./status.js";
 import { registerGetThemesTool, registerGetFoldersTool } from "./workspace.js";
+import { registerGenerateImageTool, registerGetImageGenerationStatusTool, registerArchiveImageTool, } from "./images.js";
 export function registerAllTools(server) {
     // Generation
     registerGenerateTool(server);
@@ -15,6 +16,10 @@ export function registerAllTools(server) {
     // Status and exports
     registerGetGenerationStatusTool(server);
     registerDownloadExportTool(server);
+    // Images
+    registerGenerateImageTool(server);
+    registerGetImageGenerationStatusTool(server);
+    registerArchiveImageTool(server);
     // Workspace discovery
     registerGetThemesTool(server);
     registerGetFoldersTool(server);
