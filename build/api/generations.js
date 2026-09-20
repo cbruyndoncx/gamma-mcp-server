@@ -1,21 +1,21 @@
 /**
- * Gamma API Client
- * Handles all interactions with the Gamma API (v1.0)
+ * Generation endpoints
+ *
+ * POST /generations, GET /generations/{id}, and the polling loop that turns
+ * the pair into a single blocking call.
  */
 import fetch from "node-fetch";
-import dotenv from "dotenv";
-import { GAMMA_API_CONFIG, GAMMA_API_DEFAULTS, GENERATION_STATUS, DOWNLOAD_PATH, } from "./constants.js";
-dotenv.config();
-const GAMMA_API_KEY = process.env.GAMMA_API_KEY;
+import { GAMMA_API_CONFIG, GAMMA_API_DEFAULTS, GENERATION_STATUS, DOWNLOAD_PATH, } from "../constants.js";
+import { apiRequest, nextPollDelay, GammaApiError } from "./client.js";
 /**
- * Normalize parameters to the shape the Gamma API expects
+ * Normalize parameters to the shape the Gamma API expects.
  */
 function normalizeRequestBody(params) {
     const body = {
         inputText: params.inputText,
         format: params.format || GAMMA_API_DEFAULTS.FORMAT,
+        textMode: params.textMode || GAMMA_API_DEFAULTS.TEXT_MODE,
     };
-    body.textMode = params.textMode || GAMMA_API_DEFAULTS.TEXT_MODE;
     if (params.exportAs)
         body.exportAs = params.exportAs;
     if (typeof params.numCards === "number")
@@ -37,56 +37,38 @@ function normalizeRequestBody(params) {
     return body;
 }
 /**
- * Turn an API error body into a readable message.
- * The v1.0 API returns { message, statusCode } on failure.
+ * Collapse file-level and per-page warnings into one string for display.
  */
-function describeError(status, body) {
-    try {
-        const parsed = JSON.parse(body);
-        if (parsed?.message)
-            return `${status}: ${parsed.message}`;
-    }
-    catch {
-        // body was not JSON; fall through to the raw text
-    }
-    return `${status}: ${body}`;
+function collectWarnings(data) {
+    const parts = [];
+    if (data.warnings)
+        parts.push(data.warnings);
+    data.pageWarnings?.forEach((w, i) => {
+        if (w)
+            parts.push(`page ${i + 1}: ${w}`);
+    });
+    return parts.length ? parts.join("; ") : null;
 }
-/**
- * Make a request to the Gamma API
- */
-async function makeRequest(url, method, body) {
-    const headers = {
-        Accept: "application/json",
-        [GAMMA_API_CONFIG.API_KEY_HEADER]: GAMMA_API_KEY || "",
-    };
-    if (method === "POST") {
-        headers["Content-Type"] = "application/json";
-    }
-    return fetch(url, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
+/** GET /generations/{id} */
+export async function getGenerationStatus(generationId) {
+    return apiRequest(`/generations/${generationId}`);
+}
+/** POST /generations - returns a generationId; URLs come from polling. */
+export async function createGeneration(params) {
+    return apiRequest("/generations", {
+        method: "POST",
+        body: normalizeRequestBody(params),
     });
 }
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
- * Fetch the current state of a generation.
+ * Poll a generation until it completes, fails, or the timeout elapses.
+ * Poll spacing adapts to remaining burst capacity.
  */
-async function fetchGenerationStatus(generationId) {
-    const statusUrl = `${GAMMA_API_CONFIG.BASE_URL}/${generationId}`;
-    const response = await makeRequest(statusUrl, "GET");
-    if (!response.ok) {
-        throw new Error(describeError(response.status, await response.text()));
-    }
-    return (await response.json());
-}
-/**
- * Poll generation status until completion or timeout.
- * The API documents a 5s cadence; most generations finish in 1-3 minutes.
- */
-async function pollGenerationStatus(generationId, warnings) {
+export async function pollGenerationStatus(generationId, warnings = null) {
     const start = Date.now();
     while (Date.now() - start < GAMMA_API_CONFIG.TIMEOUT_MS) {
-        const data = await fetchGenerationStatus(generationId);
+        const data = await getGenerationStatus(generationId);
         if (data.status === GENERATION_STATUS.COMPLETED) {
             return {
                 url: data.gammaUrl ?? null,
@@ -113,7 +95,7 @@ async function pollGenerationStatus(generationId, warnings) {
                     : "Generation failed.",
             };
         }
-        await new Promise((resolve) => setTimeout(resolve, GAMMA_API_CONFIG.POLL_INTERVAL_MS));
+        await sleep(nextPollDelay(GAMMA_API_CONFIG.POLL_INTERVAL_MS));
     }
     return {
         url: null,
@@ -126,21 +108,7 @@ async function pollGenerationStatus(generationId, warnings) {
     };
 }
 /**
- * Collapse file-level and per-page warnings into one string for display.
- */
-function collectWarnings(data) {
-    const parts = [];
-    if (data.warnings)
-        parts.push(data.warnings);
-    data.pageWarnings?.forEach((w, i) => {
-        if (w)
-            parts.push(`page ${i + 1}: ${w}`);
-    });
-    return parts.length ? parts.join("; ") : null;
-}
-/**
- * Generate a presentation using the Gamma API.
- * POST returns only a generationId; URLs come from polling.
+ * Create a generation and wait for it to finish.
  */
 export async function generatePresentation(params) {
     const failed = (error) => ({
@@ -153,33 +121,25 @@ export async function generatePresentation(params) {
         error,
     });
     try {
-        const body = normalizeRequestBody(params);
-        const createResp = await makeRequest(GAMMA_API_CONFIG.BASE_URL, "POST", body);
-        if (!createResp.ok) {
-            return failed(describeError(createResp.status, await createResp.text()));
-        }
-        const createData = (await createResp.json());
-        const warnings = collectWarnings(createData);
+        const createData = await createGeneration(params);
         if (!createData.generationId) {
             return failed(`The API accepted the request but returned no generationId: ${JSON.stringify(createData)}`);
         }
-        return await pollGenerationStatus(createData.generationId, warnings);
+        return await pollGenerationStatus(createData.generationId, collectWarnings(createData));
     }
     catch (err) {
-        return failed(err?.message || String(err));
+        return failed(err instanceof GammaApiError ? err.message : err?.message || String(err));
     }
 }
 /**
- * Get the assets for a generation.
+ * Fetch a generation's assets.
+ *
  * Only one `exportAs` is permitted per generation, so there is exactly one
  * exportUrl - not a separate PDF and PPTX.
  */
 export async function getPresentationAssets(generationId, download = false) {
-    const data = await fetchGenerationStatus(generationId);
-    const result = {
-        generationId,
-        status: data.status,
-    };
+    const data = await getGenerationStatus(generationId);
+    const result = { generationId, status: data.status };
     if (data.gammaId)
         result.gammaId = data.gammaId;
     if (data.gammaUrl)
@@ -199,6 +159,9 @@ export async function getPresentationAssets(generationId, download = false) {
 }
 /**
  * Download an export to the local filesystem.
+ *
+ * Goes direct rather than through apiRequest: export URLs are pre-signed and
+ * must not carry the API key.
  */
 async function downloadExport(generationId, exportUrl, exportFormat) {
     const fs = await import("fs");

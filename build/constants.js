@@ -2,10 +2,25 @@
  * Gamma API Configuration Constants
  */
 export const GAMMA_API_CONFIG = {
-    BASE_URL: "https://public-api.gamma.app/v1.0/generations",
+    /** API root. Endpoint paths are appended to this. */
+    BASE_URL: "https://public-api.gamma.app/v1.0",
     API_KEY_HEADER: "X-API-KEY",
     TIMEOUT_MS: 5 * 60_000, // 5 minutes; Gamma documents 1-3 minutes as typical
     POLL_INTERVAL_MS: 5_000, // 5 seconds, per Gamma's documented polling cadence
+};
+/**
+ * Rate limiting. Every response carries x-ratelimit-* headers; when burst
+ * capacity runs low we slow polling down rather than waiting for a 429.
+ */
+export const GAMMA_RATE_LIMIT = {
+    /** Below this many burst requests remaining, back off. */
+    BURST_LOW_WATER: 100,
+    /** Multiplier applied to the poll interval when running low. */
+    BACKOFF_FACTOR: 3,
+    /** Documented pause after a 429 before the first retry. */
+    RETRY_AFTER_429_MS: 30_000,
+    /** Maximum retries for a transient failure (429, 500, 502). */
+    MAX_RETRIES: 3,
 };
 export const GAMMA_API_DEFAULTS = {
     FORMAT: "presentation",
@@ -63,6 +78,18 @@ export const GAMMA_HEADER_FOOTER_IMAGE_SOURCES = ["themeLogo", "custom"];
  * Header/Footer element sizes
  */
 export const GAMMA_HEADER_FOOTER_SIZES = ["sm", "md", "lg", "xl"];
+/**
+ * Sharing access levels. `fullAccess` is workspace-members-only.
+ */
+export const GAMMA_SHARING_WORKSPACE_ACCESS = [
+    "noAccess",
+    "view",
+    "comment",
+    "edit",
+    "fullAccess",
+];
+export const GAMMA_SHARING_EXTERNAL_ACCESS = ["noAccess", "view", "comment", "edit"];
+export const GAMMA_SHARING_EMAIL_ACCESS = ["view", "comment", "edit", "fullAccess"];
 export const GENERATION_STATUS = {
     PENDING: "pending",
     COMPLETED: "completed",

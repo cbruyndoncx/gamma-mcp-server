@@ -7,7 +7,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerAllTools } from "./mcp-tools.js";
+import { registerAllTools } from "./tools/index.js";
 import { registerAllPrompts } from "./mcp-prompts.js";
 
 /**

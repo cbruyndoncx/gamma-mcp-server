@@ -201,14 +201,18 @@ rather than implying full-content reads.
 - [x] **0.8** `mcp-tools.ts`: remove the multiple-of-5 `numCards` rounding in `generate-executive-report`; clamp to 1–75. Verify against a live call before merging. *(D10)*
 - [x] **0.9** `mcp-tools.ts`: stop logging `exportUrl`; add a one-line "treat as secret, expires ~1 week" note to any tool output that returns one. *(D11)*
 
-### Phase 1 — Foundation refactor
+### Phase 1 — Foundation refactor ✅ **COMPLETE 2026-09-20**
 
-- [ ] **1.1** New `src/schemas.ts`: extract shared Zod fragments — `headerFooterElementSchema` (kills the 6× duplication), `headerFooterSchema`, `textOptionsSchema`, `imageOptionsSchema`, `cardOptionsSchema`, `sharingOptionsSchema`, `pageSchema`. *(D12)*
-- [ ] **1.2** Split `gamma-api.ts` into `src/api/client.ts` (single `request()` with `X-API-KEY`, JSON handling, typed error mapping for 400/401/402/403/404/429/500/502, and rate-limit header capture) plus `generations.ts`, `images.ts`, `workspace.ts`, `management.ts`, `analytics.ts`.
-- [ ] **1.3** `client.ts`: adaptive polling — read `x-ratelimit-remaining-burst` and back off when low; on 429, wait 30 s then exponential backoff. *(D4)*
-- [ ] **1.4** `constants.ts`: change `BASE_URL` to the API root (`https://public-api.gamma.app/v1.0`) so non-generation endpoints can be built from it.
-- [ ] **1.5** `types.ts`: replace `GammaAPIResponse` with the real v1.0 shapes — `CreateGenerationResponse`, `GenerationStatusResponse`, `CreditsResponse`, `PageGenerationResult`, `ErrorResponse`, `ExportStatusResponse`, `ThemeItem`, `FolderItem`, and the analytics types.
-- [ ] **1.6** Split `mcp-tools.ts` into `src/tools/` — `generation.ts`, `images.ts`, `workspace.ts`, `management.ts`, `analytics.ts`, `presets.ts`, with `registerAllTools` composing them.
+> `src/api/` holds `client.ts` and `generations.ts`. The `images.ts`,
+> `workspace.ts`, `management.ts` and `analytics.ts` modules are created by
+> their own phases rather than landing as empty stubs.
+
+- [x] **1.1** New `src/schemas.ts`: extract shared Zod fragments — `headerFooterElementSchema` (kills the 6× duplication), `headerFooterSchema`, `textOptionsSchema`, `imageOptionsSchema`, `cardOptionsSchema`, `sharingOptionsSchema`, `pageSchema`. *(D12)*
+- [x] **1.2** Split `gamma-api.ts` into `src/api/client.ts` (single `request()` with `X-API-KEY`, JSON handling, typed error mapping for 400/401/402/403/404/429/500/502, and rate-limit header capture) plus `generations.ts`, `images.ts`, `workspace.ts`, `management.ts`, `analytics.ts`.
+- [x] **1.3** `client.ts`: adaptive polling — read `x-ratelimit-remaining-burst` and back off when low; on 429, wait 30 s then exponential backoff. *(D4)*
+- [x] **1.4** `constants.ts`: change `BASE_URL` to the API root (`https://public-api.gamma.app/v1.0`) so non-generation endpoints can be built from it.
+- [x] **1.5** `types.ts`: replace `GammaAPIResponse` with the real v1.0 shapes — `CreateGenerationResponse`, `GenerationStatusResponse`, `CreditsResponse`, `PageGenerationResult`, `ErrorResponse`, `ExportStatusResponse`, `ThemeItem`, `FolderItem`, and the analytics types.
+- [x] **1.6** Split `mcp-tools.ts` into `src/tools/` — `generation.ts`, `images.ts`, `workspace.ts`, `management.ts`, `analytics.ts`, `presets.ts`, with `registerAllTools` composing them.
 
 ### Phase 2 — `generate` parity
 

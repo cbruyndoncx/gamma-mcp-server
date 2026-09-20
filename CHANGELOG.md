@@ -14,6 +14,22 @@
   `typescript` / `@types/node` moved into `devDependencies` — `npm run build`
   previously failed on any clean clone.
 
+### Internal restructure
+
+- `gamma-api.ts` split into `src/api/client.ts` (auth, error mapping, retries,
+  rate-limit accounting) and `src/api/generations.ts`.
+- `mcp-tools.ts` split into `src/tools/{generation,presets,assets,format,index}.ts`.
+- New `src/schemas.ts` holds the shared Zod fragments. The header/footer slot schema
+  was previously copy-pasted six times; it is now defined once and gained the
+  500-character bound on `value` that the API enforces but the old schema did not.
+- **Rate-limit-aware polling.** The client reads `x-ratelimit-remaining-burst` and
+  slows down before hitting a 429 rather than after. Transient failures (429, 5xx)
+  retry with backoff, honouring `Retry-After` when present.
+- `BASE_URL` is now the API root, so non-generation endpoints can be built from it.
+- API errors now carry an actionable hint per status code (401 points at the
+  `sk-gamma-` prefix and the `X-API-KEY` header, 402 at billing, 404 at the `g_`
+  file-ID-versus-URL-slug confusion).
+
 ### Gamma v1.0 API correctness pass
 
 - **`unsplash` removed from `imageOptions.source`.** The v1.0 API rejects it with a

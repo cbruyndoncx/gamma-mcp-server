@@ -12,6 +12,9 @@ import type {
   GAMMA_HEADER_FOOTER_TYPES,
   GAMMA_HEADER_FOOTER_IMAGE_SOURCES,
   GAMMA_HEADER_FOOTER_SIZES,
+  GAMMA_SHARING_WORKSPACE_ACCESS,
+  GAMMA_SHARING_EXTERNAL_ACCESS,
+  GAMMA_SHARING_EMAIL_ACCESS,
 } from "./constants.js";
 
 export type GammaTextMode = (typeof GAMMA_TEXT_MODES)[number];
@@ -54,6 +57,21 @@ export interface GammaHeaderFooter {
   bottomCenter?: GammaHeaderFooterElement;
   hideFromFirstCard?: boolean;
   hideFromLastCard?: boolean;
+}
+
+export type GammaSharingWorkspaceAccess = (typeof GAMMA_SHARING_WORKSPACE_ACCESS)[number];
+export type GammaSharingExternalAccess = (typeof GAMMA_SHARING_EXTERNAL_ACCESS)[number];
+export type GammaSharingEmailAccess = (typeof GAMMA_SHARING_EMAIL_ACCESS)[number];
+
+export interface GammaEmailOptions {
+  recipients: string[];
+  access?: GammaSharingEmailAccess;
+}
+
+export interface GammaSharingOptions {
+  workspaceAccess?: GammaSharingWorkspaceAccess;
+  externalAccess?: GammaSharingExternalAccess;
+  emailOptions?: GammaEmailOptions;
 }
 
 export interface GammaCardOptions {
