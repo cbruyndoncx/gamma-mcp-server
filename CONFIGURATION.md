@@ -8,7 +8,7 @@ The Gamma MCP Server can be configured via environment variables, making it easy
 
 ```bash
 # Basic usage - uses all public prompts from the package
-GAMMA_API_KEY=your_key npx gamma-mcp-server
+GAMMA_API_KEY=your_key npx thirdbrain-gamma-mcp-server
 ```
 
 The public prompts are **bundled with the npm package**, so you get all 11 prompts automatically!
@@ -38,6 +38,12 @@ Paths can be:
 |----------|-------------|---------|----------|
 | `GAMMA_PROMPTS_HOT_RELOAD` | Enable automatic prompt reload on file changes | `true` | No |
 
+### Download Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `GAMMA_DOWNLOAD_DIR` | Directory `get-presentation-assets` writes downloaded exports to | `/tmp` | No |
+
 Set to `false` to disable hot-reload.
 
 ## Public Prompts with NPX
@@ -47,7 +53,7 @@ Set to `false` to disable hot-reload.
 When you run via `npx`, the package includes all public prompts in its bundle:
 
 ```
-node_modules/gamma-mcp-server/
+node_modules/thirdbrain-gamma-mcp-server/
 ├── build/               # Compiled code
 ├── prompts/
 │   └── public/         # 11 public prompts (bundled) ✓
@@ -94,7 +100,7 @@ Available public prompts:
 ```bash
 # Uses public prompts from the package
 # No private prompts directory needed
-GAMMA_API_KEY=your_key npx gamma-mcp-server
+GAMMA_API_KEY=your_key npx thirdbrain-gamma-mcp-server
 ```
 
 ### 2. Add Your Own Private Prompts (Recommended)
@@ -119,7 +125,7 @@ EOF
 # Run with both public (from package) + private (yours)
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 
 # Result: 11 public prompts + your custom prompts!
 ```
@@ -138,7 +144,7 @@ nano ~/.gamma-prompts/business-pitch-deck.json
 # Your version overrides the public one
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### 4. Use Completely Custom Prompts (Advanced)
@@ -148,7 +154,7 @@ npx gamma-mcp-server
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PUBLIC_DIR=/opt/my-prompts \
 GAMMA_PROMPTS_PRIVATE_DIR=/home/user/private-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### 5. Run with Hot-Reload Disabled
@@ -157,7 +163,7 @@ npx gamma-mcp-server
 # Disable automatic reloading (for production)
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_HOT_RELOAD=false \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### 6. Run with .env File (Local Development)
@@ -178,7 +184,7 @@ GAMMA_PROMPTS_HOT_RELOAD=true
 
 Run:
 ```bash
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ## Hot-Reload Feature
@@ -199,13 +205,13 @@ When enabled (default), the server automatically detects changes to prompt JSON 
 
 ```bash
 # Start server with hot-reload enabled (default)
-$ GAMMA_API_KEY=your_key npx gamma-mcp-server
+$ GAMMA_API_KEY=your_key npx thirdbrain-gamma-mcp-server
 Loaded 11 external prompt(s) from:
   - Public: prompts/public
   - Private: prompts/private
 Watching for prompt changes in: prompts/public
 Watching for prompt changes in: prompts/private
-Gamma MCP Server running on stdio
+ThirdBrain Gamma MCP Server running on stdio
 
 # In another terminal, edit a prompt
 $ nano prompts/private/my-prompt.json
@@ -228,7 +234,7 @@ Disable hot-reload in these scenarios:
 4. **Performance** - On systems with many prompt files
 
 ```bash
-GAMMA_PROMPTS_HOT_RELOAD=false npx gamma-mcp-server
+GAMMA_PROMPTS_HOT_RELOAD=false npx thirdbrain-gamma-mcp-server
 ```
 
 ## Directory Structure Examples
@@ -239,7 +245,7 @@ GAMMA_PROMPTS_HOT_RELOAD=false npx gamma-mcp-server
 # Company-wide shared prompts + your private ones
 GAMMA_PROMPTS_PUBLIC_DIR=/mnt/shared/team-prompts \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 Directory layout:
@@ -262,20 +268,20 @@ Different prompts for different environments:
 **Development:**
 ```bash
 GAMMA_PROMPTS_PRIVATE_DIR=./prompts/dev \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 **Staging:**
 ```bash
 GAMMA_PROMPTS_PRIVATE_DIR=./prompts/staging \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 **Production:**
 ```bash
 GAMMA_PROMPTS_PRIVATE_DIR=/etc/gamma/prompts/production \
 GAMMA_PROMPTS_HOT_RELOAD=false \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ### Example 3: User-Specific Prompts
@@ -285,7 +291,7 @@ Each user has their own private prompts:
 ```bash
 # User's home directory setup
 GAMMA_PROMPTS_PRIVATE_DIR=$HOME/.config/gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ## MCP Client Configuration
@@ -297,9 +303,9 @@ When using with Claude Desktop or other MCP clients, configure in their settings
 ```json
 {
   "mcpServers": {
-    "gamma-presentation": {
+    "thirdbrain-gamma": {
       "command": "npx",
-      "args": ["-y", "gamma-mcp-server"],
+      "args": ["-y", "thirdbrain-gamma-mcp-server"],
       "env": {
         "GAMMA_API_KEY": "your_api_key_here",
         "GAMMA_PROMPTS_PRIVATE_DIR": "/home/user/my-gamma-prompts",

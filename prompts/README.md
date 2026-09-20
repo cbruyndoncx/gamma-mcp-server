@@ -1,4 +1,4 @@
-# Gamma MCP Server Prompts
+# ThirdBrain Gamma MCP Server Prompts
 
 This directory contains prompt templates for the Gamma MCP Server.
 

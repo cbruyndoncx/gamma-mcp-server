@@ -1,4 +1,4 @@
-# Gamma MCP Server
+# ThirdBrain Gamma MCP Server
 
 Generate professional presentations using the Gamma API through MCP clients like Claude Desktop. No git clone needed - run directly with `npx`!
 
@@ -22,7 +22,7 @@ Generate professional presentations using the Gamma API through MCP clients like
 No installation needed - includes all 11 public prompts automatically:
 
 ```bash
-GAMMA_API_KEY=your_gamma_api_key npx gamma-mcp-server
+GAMMA_API_KEY=your_gamma_api_key npx thirdbrain-gamma-mcp-server
 ```
 
 Get your Gamma API key from the [Gamma API docs](https://gamma.app/docs/Gamma-API-Alpha-4jaho6nbvdvpxng).
@@ -59,9 +59,9 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "gamma-presentation": {
+    "thirdbrain-gamma": {
       "command": "npx",
-      "args": ["-y", "gamma-mcp-server"],
+      "args": ["-y", "thirdbrain-gamma-mcp-server"],
       "env": {
         "GAMMA_API_KEY": "your_gamma_api_key_here"
       }
@@ -95,7 +95,7 @@ EOF
 # Run with both public + private prompts
 GAMMA_API_KEY=your_key \
 GAMMA_PROMPTS_PRIVATE_DIR=~/.gamma-prompts \
-npx gamma-mcp-server
+npx thirdbrain-gamma-mcp-server
 ```
 
 ## Environment Variables
@@ -106,6 +106,7 @@ npx gamma-mcp-server
 | `GAMMA_PROMPTS_PUBLIC_DIR` | `prompts/public` | Public prompts location |
 | `GAMMA_PROMPTS_PRIVATE_DIR` | `prompts/private` | Private prompts location |
 | `GAMMA_PROMPTS_HOT_RELOAD` | `true` | Enable automatic prompt reload |
+| `GAMMA_DOWNLOAD_DIR` | `/tmp` | Where downloaded exports are written |
 
 ## Using the Server
 

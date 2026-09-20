@@ -1,4 +1,4 @@
-# Contributing to Gamma MCP Server
+# Contributing to ThirdBrain Gamma MCP Server
 
 Thank you for your interest in contributing! This guide covers the technical setup and development workflow for contributors.
 
@@ -177,7 +177,7 @@ node build/index.js
    ```json
    {
      "mcpServers": {
-       "gamma-presentation-dev": {
+       "thirdbrain-gamma-dev": {
          "command": "node",
          "args": ["build/index.js"],
          "cwd": "/absolute/path/to/your/gamma-mcp-server",
@@ -339,7 +339,7 @@ npm publish
 
 Users can then run:
 ```bash
-npx gamma-mcp-server@latest
+npx thirdbrain-gamma-mcp-server@latest
 ```
 
 ## Contribution Guidelines
