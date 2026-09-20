@@ -1,5 +1,50 @@
 # Changelog
 
+## Unreleased
+
+### Renamed to ThirdBrain Gamma MCP Server
+
+- npm package is now `thirdbrain-gamma-mcp-server` (npm forbids capitals in new
+  package names, so the display name "ThirdBrain Gamma MCP Server" is prose only).
+- MCP server identity is now `thirdbrain-gamma`, renamed from `gamma-presentation`
+  so it does not collide with Gamma's official MCP server in the same client.
+- The GitHub repository is still `cbruyndoncx/gamma-mcp-server`; clone URLs and
+  `cd gamma-mcp-server` in the docs are unchanged.
+- `package.json` gained the `version` and `description` fields it was missing, and
+  `typescript` / `@types/node` moved into `devDependencies` — `npm run build`
+  previously failed on any clean clone.
+
+### Gamma v1.0 API correctness pass
+
+- **`unsplash` removed from `imageOptions.source`.** The v1.0 API rejects it with a
+  400. Replaced by `pexels`; `themeAccent` added.
+- **Polling now runs at 5s** (was 30s) with a 5-minute ceiling, matching Gamma's
+  documented cadence.
+- **`png` added to `exportAs`.** It returns a .zip with one PNG per card.
+- **Warnings are surfaced.** `warnings` and `pageWarnings` from the create response
+  are now shown — this is how Gamma reports a parameter it silently ignored.
+- **Credits are surfaced.** `credits.deducted` / `credits.remaining` appear on every
+  generation result.
+- **Export URLs are labelled as secrets** and no longer written to the server log.
+  They are unauthenticated and expire after about a week.
+- **Dead response handling removed.** The client no longer probes `pdfUrl`,
+  `pptxUrl`, `exports[]`, `outputs[]`, `artifacts[]` or snake_case aliases; none
+  exist in v1.0. API errors now report Gamma's own `{ message, statusCode }`.
+- **`get-presentation-assets` returns a single `exportUrl`**, since the API permits
+  only one `exportAs` per generation. It can no longer claim to return both a PDF
+  and a PPTX.
+- **Schema bounds added** to match the API: `inputText` ≤400,000,
+  `additionalInstructions` ≤5,000, `tone`/`audience` ≤500, `style` ≤5,000,
+  `folderIds` at most 1 item.
+- **`numCards` rounding removed** from `generate-executive-report`. The API
+  documents a plain 1–75 integer; the previous multiple-of-5 stepping is not in the
+  current spec. See the `TODO(verify)` in `src/mcp-tools.ts` — this needs one live
+  confirmation call.
+- **`GAMMA_DOWNLOAD_DIR`** replaces the hardcoded `/tmp` download path.
+
+See [docs/API_UPDATE_PLAN.md](docs/API_UPDATE_PLAN.md) for the full plan, including
+the remaining phases and the tool-name parity table against Gamma's official MCP server.
+
 ## Recent Major Changes
 
 ### JSON-Based Prompt System (Current)
@@ -18,7 +63,7 @@
 
 1. **Runtime Configuration**
    ```bash
-   GAMMA_PROMPTS_PRIVATE_DIR=~/my-prompts npx gamma-mcp-server
+   GAMMA_PROMPTS_PRIVATE_DIR=~/my-prompts npx thirdbrain-gamma-mcp-server
    ```
 
 2. **Hot-Reload (Enabled by Default)**

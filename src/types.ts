@@ -91,42 +91,80 @@ export interface GammaAPIRequestBody {
   themeId?: string;
 }
 
+/** Credit accounting returned on a completed or failed generation. */
+export interface GammaCredits {
+  deducted: number;
+  remaining: number;
+}
+
+/** Error envelope used across the v1.0 API. */
+export interface GammaErrorResponse {
+  message: string;
+  statusCode: number;
+}
+
+/** Response to POST /v1.0/generations. Carries no URLs - those come from polling. */
+export interface GammaCreateGenerationResponse {
+  generationId: string;
+  /** File-level warnings about ignored or adjusted options. */
+  warnings?: string;
+  /** Per-page warnings, index-aligned with the `pages` request array. */
+  pageWarnings?: (string | null)[];
+}
+
+/** One page's result within a multi-page generation. */
+export interface GammaPageGenerationResult {
+  gammaId: string;
+  gammaUrl: string;
+  status: GammaGenerationStatus;
+  error?: GammaErrorResponse;
+  exportUrl?: string;
+}
+
+export type GammaGenerationStatus = "pending" | "completed" | "failed";
+
+/** Response to GET /v1.0/generations/{id}. */
+export interface GammaGenerationStatusResponse {
+  generationId: string;
+  status: GammaGenerationStatus;
+  gammaId?: string;
+  gammaUrl?: string;
+  /**
+   * Download URL for the export, when `exportAs` was set. Expires after about a
+   * week and is NOT tied to the API key - anyone with the link can download it.
+   * Treat as a secret: do not log it.
+   */
+  exportUrl?: string;
+  error?: GammaErrorResponse;
+  credits?: GammaCredits;
+  pages?: GammaPageGenerationResult[];
+}
+
+/** Normalized result this server hands back to its tools. */
 export interface GammaGenerationResult {
   url: string | null;
   generationId: string | null;
+  gammaId: string | null;
+  exportUrl: string | null;
+  credits: GammaCredits | null;
+  warnings: string | null;
   error: string | null;
 }
 
-export interface GammaAPIResponse {
-  generationId?: string;
-  generation_id?: string;
-  id?: string;
-  gammaUrl?: string;
-  url?: string;
-  exportUrl?: string;
-  export_url?: string;
-  outputUrl?: string;
-  output_url?: string;
-  gamma_url?: string;
-  pdfUrl?: string;
-  pptxUrl?: string;
-  status?: string;
-  state?: string;
-  outputs?: Array<{ url?: string }>;
-  exports?: Array<{ url?: string } | string>;
-  artifacts?: Array<{ url?: string }>;
-}
-
 export interface GammaAssetDownloads {
-  pdf?: string;
-  pdf_error?: string;
-  pptx?: string;
-  pptx_error?: string;
+  path?: string;
+  error?: string;
 }
 
 export interface GammaAssets {
   generationId: string;
-  pdf?: string;
-  pptx?: string;
-  downloads?: GammaAssetDownloads;
+  status: GammaGenerationStatus;
+  gammaId?: string;
+  gammaUrl?: string;
+  /** Single export URL - the API permits only one `exportAs` per generation. */
+  exportUrl?: string;
+  /** Format inferred from the export URL, for convenience. */
+  exportFormat?: string;
+  credits?: GammaCredits;
+  download?: GammaAssetDownloads;
 }

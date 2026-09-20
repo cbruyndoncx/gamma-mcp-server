@@ -1,6 +1,6 @@
 /**
  * Gamma API Client
- * Handles all interactions with the Gamma API
+ * Handles all interactions with the Gamma API (v1.0)
  */
 import fetch from "node-fetch";
 import dotenv from "dotenv";
@@ -15,33 +15,19 @@ function normalizeRequestBody(params) {
         inputText: params.inputText,
         format: params.format || GAMMA_API_DEFAULTS.FORMAT,
     };
-    // Set textMode
     body.textMode = params.textMode || GAMMA_API_DEFAULTS.TEXT_MODE;
-    // Export format
-    if (params.exportAs) {
+    if (params.exportAs)
         body.exportAs = params.exportAs;
-    }
-    // Number of cards
-    if (typeof params.numCards === "number") {
+    if (typeof params.numCards === "number")
         body.numCards = params.numCards;
-    }
-    // Additional instructions
-    if (params.additionalInstructions) {
+    if (params.additionalInstructions)
         body.additionalInstructions = params.additionalInstructions;
-    }
-    // Text options
-    if (params.textOptions) {
+    if (params.textOptions)
         body.textOptions = params.textOptions;
-    }
-    // Image options
-    if (params.imageOptions) {
+    if (params.imageOptions)
         body.imageOptions = params.imageOptions;
-    }
-    // Card options (dimensions and header/footer)
-    if (params.cardOptions) {
+    if (params.cardOptions)
         body.cardOptions = params.cardOptions;
-    }
-    // Other optional fields
     if (params.folderIds)
         body.folderIds = params.folderIds;
     if (params.cardSplit)
@@ -51,45 +37,19 @@ function normalizeRequestBody(params) {
     return body;
 }
 /**
- * Extract generation ID from API response
+ * Turn an API error body into a readable message.
+ * The v1.0 API returns { message, statusCode } on failure.
  */
-function extractGenerationId(data) {
-    return data.generationId || data.generation_id || data.id || null;
-}
-/**
- * Extract URL from API response
- */
-function extractUrl(data) {
-    // Direct URL properties
-    const directUrl = data.gammaUrl ||
-        data.gamma_url ||
-        data.url ||
-        data.exportUrl ||
-        data.export_url ||
-        data.outputUrl ||
-        data.output_url;
-    if (directUrl)
-        return directUrl;
-    // Check arrays for URLs
-    const arrayUrl = data.outputs?.[0]?.url ||
-        (typeof data.exports?.[0] === "object" && data.exports[0]?.url) ||
-        data.artifacts?.[0]?.url ||
-        (typeof data.exports?.[0] === "string" ? data.exports[0] : null);
-    return arrayUrl || null;
-}
-/**
- * Check if generation status is completed
- */
-function isCompleted(status) {
-    const lowerStatus = status.toLowerCase();
-    return GENERATION_STATUS.COMPLETED.some(s => s === lowerStatus);
-}
-/**
- * Check if generation status is failed
- */
-function isFailed(status) {
-    const lowerStatus = status.toLowerCase();
-    return GENERATION_STATUS.FAILED.some(s => s === lowerStatus);
+function describeError(status, body) {
+    try {
+        const parsed = JSON.parse(body);
+        if (parsed?.message)
+            return `${status}: ${parsed.message}`;
+    }
+    catch {
+        // body was not JSON; fall through to the raw text
+    }
+    return `${status}: ${body}`;
 }
 /**
  * Make a request to the Gamma API
@@ -109,35 +69,48 @@ async function makeRequest(url, method, body) {
     });
 }
 /**
- * Poll generation status until completion or timeout
+ * Fetch the current state of a generation.
  */
-async function pollGenerationStatus(generationId) {
+async function fetchGenerationStatus(generationId) {
     const statusUrl = `${GAMMA_API_CONFIG.BASE_URL}/${generationId}`;
+    const response = await makeRequest(statusUrl, "GET");
+    if (!response.ok) {
+        throw new Error(describeError(response.status, await response.text()));
+    }
+    return (await response.json());
+}
+/**
+ * Poll generation status until completion or timeout.
+ * The API documents a 5s cadence; most generations finish in 1-3 minutes.
+ */
+async function pollGenerationStatus(generationId, warnings) {
     const start = Date.now();
     while (Date.now() - start < GAMMA_API_CONFIG.TIMEOUT_MS) {
-        const response = await makeRequest(statusUrl, "GET");
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`Status poll error! status: ${response.status}, body: ${errText}`);
-        }
-        const data = await response.json();
-        const status = (data.status || data.state || "").toString().toLowerCase();
-        if (isCompleted(status)) {
-            const url = extractUrl(data);
-            if (url) {
-                return { url, generationId, error: null };
-            }
+        const data = await fetchGenerationStatus(generationId);
+        if (data.status === GENERATION_STATUS.COMPLETED) {
             return {
-                url: null,
+                url: data.gammaUrl ?? null,
                 generationId,
-                error: `Generation completed but no export URL found: ${JSON.stringify(data)}`,
+                gammaId: data.gammaId ?? null,
+                exportUrl: data.exportUrl ?? null,
+                credits: data.credits ?? null,
+                warnings,
+                error: data.gammaUrl
+                    ? null
+                    : "Generation completed but the response carried no gammaUrl.",
             };
         }
-        if (isFailed(status)) {
+        if (data.status === GENERATION_STATUS.FAILED) {
             return {
                 url: null,
                 generationId,
-                error: `Generation failed: ${JSON.stringify(data)}`,
+                gammaId: data.gammaId ?? null,
+                exportUrl: null,
+                credits: data.credits ?? null,
+                warnings,
+                error: data.error?.message
+                    ? `Generation failed - ${data.error.message}`
+                    : "Generation failed.",
             };
         }
         await new Promise((resolve) => setTimeout(resolve, GAMMA_API_CONFIG.POLL_INTERVAL_MS));
@@ -145,159 +118,109 @@ async function pollGenerationStatus(generationId) {
     return {
         url: null,
         generationId,
-        error: `Timed out waiting for generation ${generationId}`,
+        gammaId: null,
+        exportUrl: null,
+        credits: null,
+        warnings,
+        error: `Timed out after ${GAMMA_API_CONFIG.TIMEOUT_MS / 60_000} minutes waiting for generation ${generationId}.`,
     };
 }
 /**
- * Generate a presentation using the Gamma API
+ * Collapse file-level and per-page warnings into one string for display.
+ */
+function collectWarnings(data) {
+    const parts = [];
+    if (data.warnings)
+        parts.push(data.warnings);
+    data.pageWarnings?.forEach((w, i) => {
+        if (w)
+            parts.push(`page ${i + 1}: ${w}`);
+    });
+    return parts.length ? parts.join("; ") : null;
+}
+/**
+ * Generate a presentation using the Gamma API.
+ * POST returns only a generationId; URLs come from polling.
  */
 export async function generatePresentation(params) {
+    const failed = (error) => ({
+        url: null,
+        generationId: null,
+        gammaId: null,
+        exportUrl: null,
+        credits: null,
+        warnings: null,
+        error,
+    });
     try {
         const body = normalizeRequestBody(params);
-        // Make the initial create request
         const createResp = await makeRequest(GAMMA_API_CONFIG.BASE_URL, "POST", body);
         if (!createResp.ok) {
-            const bodyText = await createResp.text();
-            throw new Error(`HTTP error! status: ${createResp.status}, body: ${bodyText}`);
+            return failed(describeError(createResp.status, await createResp.text()));
         }
-        const createData = await createResp.json();
-        // Check if we got a direct URL
-        const directUrl = extractUrl(createData);
-        if (directUrl) {
-            return {
-                url: directUrl,
-                generationId: extractGenerationId(createData),
-                error: null,
-            };
+        const createData = (await createResp.json());
+        const warnings = collectWarnings(createData);
+        if (!createData.generationId) {
+            return failed(`The API accepted the request but returned no generationId: ${JSON.stringify(createData)}`);
         }
-        // Extract generation ID for polling
-        const genId = extractGenerationId(createData);
-        if (!genId) {
-            return {
-                url: null,
-                generationId: null,
-                error: `Unexpected response shape: ${JSON.stringify(createData)}`,
-            };
-        }
-        // Poll for completion
-        return await pollGenerationStatus(genId);
+        return await pollGenerationStatus(createData.generationId, warnings);
     }
     catch (err) {
-        return {
-            url: null,
-            generationId: null,
-            error: err?.message || String(err),
-        };
+        return failed(err?.message || String(err));
     }
 }
 /**
- * Get presentation assets (PDF/PPTX) for a generation
+ * Get the assets for a generation.
+ * Only one `exportAs` is permitted per generation, so there is exactly one
+ * exportUrl - not a separate PDF and PPTX.
  */
 export async function getPresentationAssets(generationId, download = false) {
-    const statusUrl = `${GAMMA_API_CONFIG.BASE_URL}/${generationId}`;
-    const response = await makeRequest(statusUrl, "GET");
-    if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`Failed to fetch generation ${generationId}: ${response.status} ${body}`);
+    const data = await fetchGenerationStatus(generationId);
+    const result = {
+        generationId,
+        status: data.status,
+    };
+    if (data.gammaId)
+        result.gammaId = data.gammaId;
+    if (data.gammaUrl)
+        result.gammaUrl = data.gammaUrl;
+    if (data.credits)
+        result.credits = data.credits;
+    if (data.exportUrl) {
+        result.exportUrl = data.exportUrl;
+        const match = data.exportUrl.split("?")[0].match(/\.(pdf|pptx|zip)$/i);
+        if (match)
+            result.exportFormat = match[1].toLowerCase();
     }
-    const data = await response.json();
-    // Extract PDF URL
-    let possiblePdf = null;
-    if (data.exportUrl && data.exportUrl.endsWith(".pdf")) {
-        possiblePdf = data.exportUrl;
-    }
-    else if (data.pdfUrl) {
-        possiblePdf = data.pdfUrl;
-    }
-    else if (Array.isArray(data.exports)) {
-        const pdfExport = data.exports.find((e) => (typeof e === "string" && e.endsWith(".pdf")) ||
-            (typeof e === "object" && e?.url && e.url.endsWith(".pdf")));
-        if (typeof pdfExport === "string") {
-            possiblePdf = pdfExport;
-        }
-        else if (typeof pdfExport === "object" && pdfExport?.url) {
-            possiblePdf = pdfExport.url;
-        }
-    }
-    // Extract PPTX URL
-    let possiblePptx = null;
-    if (data.exportUrl && data.exportUrl.endsWith(".pptx")) {
-        possiblePptx = data.exportUrl;
-    }
-    else if (data.pptxUrl) {
-        possiblePptx = data.pptxUrl;
-    }
-    else if (Array.isArray(data.exports)) {
-        const pptxExport = data.exports.find((e) => (typeof e === "string" && e.endsWith(".pptx")) ||
-            (typeof e === "object" && e?.url && e.url.endsWith(".pptx")));
-        if (typeof pptxExport === "string") {
-            possiblePptx = pptxExport;
-        }
-        else if (typeof pptxExport === "object" && pptxExport?.url) {
-            possiblePptx = pptxExport.url;
-        }
-    }
-    const result = { generationId };
-    if (possiblePdf)
-        result.pdf = possiblePdf;
-    if (possiblePptx)
-        result.pptx = possiblePptx;
-    // Download files if requested
-    if (download) {
-        result.downloads = await downloadAssets(generationId, possiblePdf, possiblePptx);
+    if (download && data.exportUrl) {
+        result.download = await downloadExport(generationId, data.exportUrl, result.exportFormat);
     }
     return result;
 }
 /**
- * Download asset files to local filesystem
+ * Download an export to the local filesystem.
  */
-async function downloadAssets(generationId, pdfUrl, pptxUrl) {
-    const downloads = {};
+async function downloadExport(generationId, exportUrl, exportFormat) {
     const fs = await import("fs");
     const path = await import("path");
-    if (pdfUrl) {
-        try {
-            const fname = path.join(DOWNLOAD_PATH, `${generationId}.pdf`);
-            const response = await fetch(pdfUrl, { method: "GET" });
-            if (response.ok && response.body) {
-                const writeStream = fs.createWriteStream(fname);
-                await new Promise((resolve, reject) => {
-                    const stream = response.body;
-                    stream.pipe(writeStream);
-                    writeStream.on("finish", resolve);
-                    writeStream.on("error", reject);
-                });
-                downloads.pdf = fname;
-            }
-            else {
-                downloads.pdf_error = `${response.status} ${await response.text()}`;
-            }
+    try {
+        const ext = exportFormat || "bin";
+        const fname = path.join(DOWNLOAD_PATH, `${generationId}.${ext}`);
+        const response = await fetch(exportUrl, { method: "GET" });
+        if (!response.ok || !response.body) {
+            // Deliberately does not echo exportUrl - it is an unauthenticated link.
+            return { error: `Download failed with status ${response.status}` };
         }
-        catch (err) {
-            downloads.pdf_error = err.message || String(err);
-        }
+        const writeStream = fs.createWriteStream(fname);
+        await new Promise((resolve, reject) => {
+            const stream = response.body;
+            stream.pipe(writeStream);
+            writeStream.on("finish", resolve);
+            writeStream.on("error", reject);
+        });
+        return { path: fname };
     }
-    if (pptxUrl) {
-        try {
-            const fname = path.join(DOWNLOAD_PATH, `${generationId}.pptx`);
-            const response = await fetch(pptxUrl, { method: "GET" });
-            if (response.ok && response.body) {
-                const writeStream = fs.createWriteStream(fname);
-                await new Promise((resolve, reject) => {
-                    const stream = response.body;
-                    stream.pipe(writeStream);
-                    writeStream.on("finish", resolve);
-                    writeStream.on("error", reject);
-                });
-                downloads.pptx = fname;
-            }
-            else {
-                downloads.pptx_error = `${response.status} ${await response.text()}`;
-            }
-        }
-        catch (err) {
-            downloads.pptx_error = err.message || String(err);
-        }
+    catch (err) {
+        return { error: err?.message || String(err) };
     }
-    return downloads;
 }

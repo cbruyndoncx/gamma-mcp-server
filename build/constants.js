@@ -4,8 +4,8 @@
 export const GAMMA_API_CONFIG = {
     BASE_URL: "https://public-api.gamma.app/v1.0/generations",
     API_KEY_HEADER: "X-API-KEY",
-    TIMEOUT_MS: 10 * 60000,
-    POLL_INTERVAL_MS: 30000, // 30 seconds between polls
+    TIMEOUT_MS: 5 * 60_000, // 5 minutes; Gamma documents 1-3 minutes as typical
+    POLL_INTERVAL_MS: 5_000, // 5 seconds, per Gamma's documented polling cadence
 };
 export const GAMMA_API_DEFAULTS = {
     FORMAT: "presentation",
@@ -14,7 +14,8 @@ export const GAMMA_API_DEFAULTS = {
 export const GAMMA_TEXT_MODES = ["generate", "condense", "preserve"];
 export const GAMMA_TEXT_AMOUNTS = ["brief", "medium", "detailed", "extensive"];
 export const GAMMA_FORMATS = ["presentation", "document", "social", "webpage"];
-export const GAMMA_EXPORT_FORMATS = ["pdf", "pptx"];
+/** `png` returns a .zip containing one PNG per card, not a single image file. */
+export const GAMMA_EXPORT_FORMATS = ["pdf", "pptx", "png"];
 export const GAMMA_CARD_SPLIT = ["auto", "inputTextBreaks"];
 /**
  * Image source options for Gamma API
@@ -22,11 +23,12 @@ export const GAMMA_CARD_SPLIT = ["auto", "inputTextBreaks"];
 export const GAMMA_IMAGE_SOURCES = [
     "aiGenerated",
     "pictographic",
-    "unsplash",
+    "pexels", // replaced "unsplash", which the v1.0 API now rejects with a 400
     "giphy",
     "webAllImages",
     "webFreeToUse",
     "webFreeToUseCommercially",
+    "themeAccent",
     "placeholder",
     "noImages",
 ];
@@ -62,10 +64,11 @@ export const GAMMA_HEADER_FOOTER_IMAGE_SOURCES = ["themeLogo", "custom"];
  */
 export const GAMMA_HEADER_FOOTER_SIZES = ["sm", "md", "lg", "xl"];
 export const GENERATION_STATUS = {
-    COMPLETED: ["completed", "succeeded"],
-    FAILED: ["failed", "error"],
+    PENDING: "pending",
+    COMPLETED: "completed",
+    FAILED: "failed",
 };
-export const DOWNLOAD_PATH = "/tmp";
+export const DOWNLOAD_PATH = process.env.GAMMA_DOWNLOAD_DIR || "/tmp";
 /**
  * Prompt directory paths - configurable via environment variables
  */
@@ -77,6 +80,6 @@ export const PROMPT_PATHS = {
  * Hot-reload configuration
  */
 export const HOT_RELOAD_CONFIG = {
-    ENABLED: process.env.GAMMA_PROMPTS_HOT_RELOAD !== "false",
+    ENABLED: process.env.GAMMA_PROMPTS_HOT_RELOAD !== "false", // Enabled by default
     DEBOUNCE_MS: 500, // Wait 500ms after last change before reloading
 };

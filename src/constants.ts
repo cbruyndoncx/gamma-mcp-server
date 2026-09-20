@@ -5,8 +5,8 @@
 export const GAMMA_API_CONFIG = {
   BASE_URL: "https://public-api.gamma.app/v1.0/generations",
   API_KEY_HEADER: "X-API-KEY",
-  TIMEOUT_MS: 10 * 60_000, // 10 minutes total timeout for generation
-  POLL_INTERVAL_MS: 30_000, // 30 seconds between polls
+  TIMEOUT_MS: 5 * 60_000, // 5 minutes; Gamma documents 1-3 minutes as typical
+  POLL_INTERVAL_MS: 5_000, // 5 seconds, per Gamma's documented polling cadence
 } as const;
 
 export const GAMMA_API_DEFAULTS = {
@@ -17,7 +17,8 @@ export const GAMMA_API_DEFAULTS = {
 export const GAMMA_TEXT_MODES = ["generate", "condense", "preserve"] as const;
 export const GAMMA_TEXT_AMOUNTS = ["brief", "medium", "detailed", "extensive"] as const;
 export const GAMMA_FORMATS = ["presentation", "document", "social", "webpage"] as const;
-export const GAMMA_EXPORT_FORMATS = ["pdf", "pptx"] as const;
+/** `png` returns a .zip containing one PNG per card, not a single image file. */
+export const GAMMA_EXPORT_FORMATS = ["pdf", "pptx", "png"] as const;
 export const GAMMA_CARD_SPLIT = ["auto", "inputTextBreaks"] as const;
 
 /**
@@ -26,11 +27,12 @@ export const GAMMA_CARD_SPLIT = ["auto", "inputTextBreaks"] as const;
 export const GAMMA_IMAGE_SOURCES = [
   "aiGenerated",
   "pictographic",
-  "unsplash",
+  "pexels", // replaced "unsplash", which the v1.0 API now rejects with a 400
   "giphy",
   "webAllImages",
   "webFreeToUse",
   "webFreeToUseCommercially",
+  "themeAccent",
   "placeholder",
   "noImages",
 ] as const;
@@ -72,11 +74,12 @@ export const GAMMA_HEADER_FOOTER_IMAGE_SOURCES = ["themeLogo", "custom"] as cons
 export const GAMMA_HEADER_FOOTER_SIZES = ["sm", "md", "lg", "xl"] as const;
 
 export const GENERATION_STATUS = {
-  COMPLETED: ["completed", "succeeded"],
-  FAILED: ["failed", "error"],
+  PENDING: "pending",
+  COMPLETED: "completed",
+  FAILED: "failed",
 } as const;
 
-export const DOWNLOAD_PATH = "/tmp";
+export const DOWNLOAD_PATH = process.env.GAMMA_DOWNLOAD_DIR || "/tmp";
 
 /**
  * Prompt directory paths - configurable via environment variables

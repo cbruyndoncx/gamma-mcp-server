@@ -5,7 +5,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { generatePresentation, getPresentationAssets } from "./gamma-api.js";
-import type { GammaGenerationParams } from "./types.js";
+import type { GammaGenerationParams, GammaGenerationResult } from "./types.js";
 import {
   GAMMA_TEXT_MODES,
   GAMMA_TEXT_AMOUNTS,
@@ -21,6 +21,55 @@ import {
 } from "./constants.js";
 
 /**
+ * Render a generation result as MCP text content.
+ *
+ * Surfaces the two things the v1.0 API returns that used to be dropped on the
+ * floor: `warnings` (how Gamma reports a parameter it silently ignored) and
+ * `credits`. The export URL is unauthenticated and expires in about a week, so
+ * it is labelled as a secret and never written to the server log.
+ */
+function formatGenerationResult(
+  result: GammaGenerationResult,
+  label: string,
+  successNote?: string
+): { content: { type: "text"; text: string }[] } {
+  const lines: string[] = [];
+
+  if (result.url) {
+    lines.push(`${label} generated! View it here: ${result.url}`);
+    if (successNote) lines.push("", successNote);
+  } else if (result.generationId) {
+    lines.push(
+      `${label} created (id=${result.generationId}) but no final URL is available yet.`,
+      `Use get-presentation-assets with this generationId to check again.`,
+      `Status: ${result.error || "unknown"}`
+    );
+  } else {
+    lines.push(`Failed to generate ${label.toLowerCase()}. Error: ${result.error || "Unknown error."}`);
+  }
+
+  if (result.gammaId) lines.push("", `Gamma ID: ${result.gammaId}`);
+
+  if (result.exportUrl) {
+    lines.push(
+      "",
+      `Export: ${result.exportUrl}`,
+      `(This link expires in about a week and is not tied to your API key - treat it as a secret.)`
+    );
+  }
+
+  if (result.credits) {
+    lines.push("", `Credits: ${result.credits.deducted} used, ${result.credits.remaining} remaining.`);
+  }
+
+  if (result.warnings) {
+    lines.push("", `Warnings from Gamma: ${result.warnings}`);
+  }
+
+  return { content: [{ type: "text", text: lines.join("\n") }] };
+}
+
+/**
  * Register the generate-presentation tool
  */
 export function registerGeneratePresentationTool(server: McpServer): void {
@@ -28,7 +77,11 @@ export function registerGeneratePresentationTool(server: McpServer): void {
     "generate-presentation",
     "Generate a presentation using the Gamma API. The response will include a link to the generated presentation when available.",
     {
-      inputText: z.string().describe("The topic or prompt for the presentation."),
+      inputText: z
+        .string()
+        .min(1)
+        .max(400_000)
+        .describe("The topic or prompt for the presentation. Max 400,000 characters."),
       textMode: z
         .enum(GAMMA_TEXT_MODES)
         .optional()
@@ -46,12 +99,15 @@ export function registerGeneratePresentationTool(server: McpServer): void {
       exportAs: z
         .enum(GAMMA_EXPORT_FORMATS)
         .optional()
-        .describe(`If set, request a direct export: ${GAMMA_EXPORT_FORMATS.map(f => `'${f}'`).join(" or ")}.`),
+        .describe(
+          `If set, request a direct export: ${GAMMA_EXPORT_FORMATS.map(f => `'${f}'`).join(" or ")}. ` +
+          `Only one format per generation. 'png' returns a .zip with one PNG per card, not a single image.`
+        ),
       textOptions: z
         .object({
           amount: z.enum(GAMMA_TEXT_AMOUNTS).optional().describe(`Text amount (${GAMMA_TEXT_AMOUNTS.join(" | ")})`),
-          tone: z.string().optional().describe("Tone/voice of the content (e.g., 'professional and confident')"),
-          audience: z.string().optional().describe("Target audience (e.g., 'investors and venture capitalists')"),
+          tone: z.string().max(500).optional().describe("Tone/voice of the content (e.g., 'professional and confident')"),
+          audience: z.string().max(500).optional().describe("Target audience (e.g., 'investors and venture capitalists')"),
           language: z.string().optional().describe("Output language code (e.g., 'en', 'es')"),
         })
         .optional()
@@ -60,7 +116,7 @@ export function registerGeneratePresentationTool(server: McpServer): void {
         .object({
           source: z.enum(GAMMA_IMAGE_SOURCES).optional().describe(`Image source (${GAMMA_IMAGE_SOURCES.join(" | ")})`),
           model: z.string().optional().describe("AI model for image generation (e.g., 'dall-e-3')"),
-          style: z.string().optional().describe("Visual style for images (e.g., 'photorealistic', 'minimalist')"),
+          style: z.string().max(5_000).optional().describe("Visual style for images (e.g., 'photorealistic', 'minimalist')"),
         })
         .optional()
         .describe("Image generation and sourcing options"),
@@ -125,8 +181,16 @@ export function registerGeneratePresentationTool(server: McpServer): void {
         })
         .optional()
         .describe("Card/slide layout options including dimensions and header/footer"),
-      additionalInstructions: z.string().optional(),
-      folderIds: z.array(z.string()).optional(),
+      additionalInstructions: z
+        .string()
+        .max(5_000)
+        .optional()
+        .describe("Extra guidance for the generator. Max 5,000 characters."),
+      folderIds: z
+        .array(z.string())
+        .max(1)
+        .optional()
+        .describe("Folder to place the result in. The API accepts at most one folder ID."),
       cardSplit: z.enum(GAMMA_CARD_SPLIT).optional().describe(`Card split mode (${GAMMA_CARD_SPLIT.join(" | ")})`),
       themeId: z.string().optional(),
     },
@@ -137,39 +201,8 @@ export function registerGeneratePresentationTool(server: McpServer): void {
         textMode: params.textMode || "generate",
       } as GammaGenerationParams;
 
-      const { url, generationId, error } = await generatePresentation(normalizedParams);
-
-      if (!url) {
-        // If we have a generationId but no URL, inform the user to use get-presentation-assets
-        if (generationId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Generation created (id=${generationId}). No final URL available yet. Use the get-presentation-assets tool with generationId to fetch exports. Polling error / status: ${error || "unknown"}`,
-              },
-            ],
-          };
-        }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to generate presentation using Gamma API. Error: ${error || "Unknown error."}`,
-            },
-          ],
-        };
-      }
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Presentation generated! View it here: ${url}`,
-          },
-        ],
-      };
+      const result = await generatePresentation(normalizedParams);
+      return formatGenerationResult(result, "Presentation");
     }
   );
 }
@@ -226,38 +259,12 @@ export function registerGenerateExecutivePresentationTool(server: McpServer): vo
       }
       
 
-      const { url, generationId, error } = await generatePresentation(executiveParams);
-
-      if (!url) {
-        if (generationId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Executive presentation created (id=${generationId}). No final URL available yet. Use the get-presentation-assets tool with generationId to fetch exports. Polling error / status: ${error || "unknown"}`,
-              },
-            ],
-          };
-        }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to generate executive presentation. Error: ${error || "Unknown error."}`,
-            },
-          ],
-        };
-      }
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Executive presentation generated! View it here: ${url}\n\nFormat: Professional PPTX with condensed text, photorealistic images, and executive-focused tone.`,
-          },
-        ],
-      };
+      const result = await generatePresentation(executiveParams);
+      return formatGenerationResult(
+        result,
+        "Executive presentation",
+        "Format: Professional PPTX with condensed text, photorealistic images, and executive-focused tone."
+      );
     }
   );
 }
@@ -307,18 +314,18 @@ export function registerGenerateExecutiveReportTool(server: McpServer): void {
         };
       }
 
-      // Calculate number of cards based on content length
-      // Gamma API allows: 1-15 cards, then increments of 5 up to 60 (20, 25, 30, ..., 60)
-      // Estimate ~1000 characters per A4 page for detailed reports
+      // Estimate ~1000 characters per A4 page for detailed reports.
+      //
+      // The v1.0 API documents numCards as a plain integer, 1-75 on Pro and
+      // above. An earlier version of this code rounded to multiples of 5 above
+      // 15 and capped at 60; no such rule appears in the current docs, so it
+      // was removed.
+      //
+      // TODO(verify): confirm with one live call using numCards: 23. If the
+      // API returns a 400, the stepping rule is real but undocumented -
+      // restore it here and record the constraint in this comment.
       const estimatedCards = Math.ceil(contentText.trim().length / 1000);
-
-      let numberOfCards: number;
-      if (estimatedCards <= 15) {
-        numberOfCards = Math.max(1, estimatedCards);
-      } else {
-        // Round up to nearest multiple of 5, max 60
-        numberOfCards = Math.min(60, Math.ceil(estimatedCards / 5) * 5);
-      }
+      const numberOfCards = Math.min(75, Math.max(1, estimatedCards));
 
       // Build request with executive report defaults
       const reportParams: GammaGenerationParams = {
@@ -360,38 +367,12 @@ export function registerGenerateExecutiveReportTool(server: McpServer): void {
         reportParams.themeId = params.themeId;
       }
 
-      const { url, generationId, error } = await generatePresentation(reportParams);
-
-      if (!url) {
-        if (generationId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Executive report created (id=${generationId}). No final URL available yet. Use the get-presentation-assets tool with generationId to fetch the PDF export. Polling error / status: ${error || "unknown"}`,
-              },
-            ],
-          };
-        }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to generate executive report. Error: ${error || "Unknown error."}`,
-            },
-          ],
-        };
-      }
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Executive report generated! View it here: ${url}\n\nFormat: A4 PDF with preserved text content, detailed formatting, photorealistic images, and executive-focused professional tone.`,
-          },
-        ],
-      };
+      const result = await generatePresentation(reportParams);
+      return formatGenerationResult(
+        result,
+        "Executive report",
+        "Format: A4 PDF with preserved text content, detailed formatting, photorealistic images, and executive-focused professional tone."
+      );
     }
   );
 }
@@ -402,13 +383,13 @@ export function registerGenerateExecutiveReportTool(server: McpServer): void {
 export function registerGetPresentationAssetsTool(server: McpServer): void {
   server.tool(
     "get-presentation-assets",
-    "Given a generationId return downloadable URLs for pdf and pptx if available, and optionally download them into the MCP server and return local paths.",
+    "Given a generationId, return its status and the single export URL if one was requested (the Gamma API permits only one exportAs per generation), and optionally download it to the MCP server host. Export URLs expire after about a week and are not tied to your API key.",
     {
       generationId: z.string().describe("The generationId returned by the Gamma generate API."),
       download: z
         .boolean()
         .optional()
-        .describe("If true, download the assets and return local file paths."),
+        .describe("If true, download the export and return the local file path."),
     },
     async (params) => {
       const { generationId, download } = params as { generationId: string; download?: boolean };
@@ -416,23 +397,18 @@ export function registerGetPresentationAssetsTool(server: McpServer): void {
       try {
         const result = await getPresentationAssets(generationId, download);
 
-        const content: any[] = [];
-        const resourceObj: any = { generationId: result.generationId };
-
-        if (result.pdf) resourceObj.pdf = result.pdf;
-        if (result.pptx) resourceObj.pptx = result.pptx;
-        if (download && result.downloads) resourceObj.downloads = result.downloads;
-
-        content.push({
-          type: "resource",
-          resource: {
-            text: JSON.stringify(resourceObj),
-            uri: "",
-            mimeType: "application/json",
-          },
-        });
-
-        return { content };
+        return {
+          content: [
+            {
+              type: "resource",
+              resource: {
+                text: JSON.stringify(result),
+                uri: "",
+                mimeType: "application/json",
+              },
+            },
+          ],
+        };
       } catch (err: any) {
         return {
           content: [
