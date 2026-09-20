@@ -19,8 +19,12 @@ export function formatGenerationResult(result, label, successNote) {
         if (successNote)
             lines.push("", successNote);
     }
+    else if (result.generationId && result.status === "pending" && !result.error) {
+        // Asked not to wait - this is the expected outcome, not a failure.
+        lines.push(`${label} started (id=${result.generationId}).`, `Poll get_generation_status with this generationId until status is completed or failed.`);
+    }
     else if (result.generationId) {
-        lines.push(`${label} created (id=${result.generationId}) but no final URL is available yet.`, `Use get-presentation-assets with this generationId to check again.`, `Status: ${result.error || "unknown"}`);
+        lines.push(`${label} created (id=${result.generationId}) but no final URL is available yet.`, `Poll get_generation_status with this generationId to check again.`, `Status: ${result.error || "unknown"}`);
     }
     else {
         lines.push(`Failed to generate ${label.toLowerCase()}. Error: ${result.error || "Unknown error."}`);

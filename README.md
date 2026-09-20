@@ -124,11 +124,24 @@ Generate a presentation about sustainable energy solutions for college
 students with 10 slides
 ```
 
-The server provides four MCP tools:
-- `generate-presentation` - Generate presentations with full customization
-- `generate-executive-presentation` - Quick executive presentations with professional defaults (condense text, brief amount, professional tone, photorealistic images, PPTX export)
-- `generate-executive-report` - Detailed A4 PDF reports with professional defaults (preserve text, detailed amount, professional tone, photorealistic images, A4 format, PDF export)
-- `get-presentation-assets` - Fetch PDF/PPTX downloads
+The server provides these MCP tools. Names match [Gamma's official MCP server](https://developers.gamma.app/mcp/mcp-tools-reference) wherever the tool does the same job, so instructions written against that server work here unchanged.
+
+| Tool | Purpose |
+|------|---------|
+| `generate` | Create a presentation, document, webpage or social post from text |
+| `generate_multi_page_gamma` | One Gamma with up to 50 distinct pages under a single URL |
+| `generate_from_template` | Adapt or remix an existing gamma used as a template |
+| `get_generation_status` | Poll a generation for status, links and credit usage |
+| `download_export` | Download a finished export to this machine |
+
+Beyond the official server, this one adds two opinionated presets:
+
+| Tool | Purpose |
+|------|---------|
+| `generate_executive_presentation` | 16x9 PPTX, condensed text, photorealistic images, logo and card numbers in the footer |
+| `generate_executive_report` | A4 PDF, preserves your exact text, detailed formatting |
+
+Generation tools block until the result is ready by default. Pass `waitForCompletion: false` to get a `generationId` back immediately and poll `get_generation_status` yourself.
 
 ## Documentation
 

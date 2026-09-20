@@ -5,7 +5,7 @@
  * so an invalid request is rejected here rather than as a 400 from the API.
  */
 import { z } from "zod";
-import { GAMMA_TEXT_AMOUNTS, GAMMA_IMAGE_SOURCES, GAMMA_CARD_DIMENSIONS, GAMMA_HEADER_FOOTER_TYPES, GAMMA_HEADER_FOOTER_POSITIONS, GAMMA_HEADER_FOOTER_IMAGE_SOURCES, GAMMA_HEADER_FOOTER_SIZES, GAMMA_SHARING_WORKSPACE_ACCESS, GAMMA_SHARING_EXTERNAL_ACCESS, GAMMA_SHARING_EMAIL_ACCESS, } from "./constants.js";
+import { GAMMA_TEXT_AMOUNTS, GAMMA_TEXT_MODES, GAMMA_FORMATS, GAMMA_CARD_SPLIT, GAMMA_IMAGE_SOURCES, GAMMA_CARD_DIMENSIONS, GAMMA_HEADER_FOOTER_TYPES, GAMMA_HEADER_FOOTER_POSITIONS, GAMMA_HEADER_FOOTER_IMAGE_SOURCES, GAMMA_HEADER_FOOTER_SIZES, GAMMA_IMAGE_STYLE_PRESETS, GAMMA_SHARING_WORKSPACE_ACCESS, GAMMA_SHARING_EXTERNAL_ACCESS, GAMMA_SHARING_EMAIL_ACCESS, } from "./constants.js";
 /** One header/footer slot. Previously copy-pasted six times. */
 export const headerFooterElementSchema = z.object({
     type: z
@@ -65,6 +65,11 @@ export const imageOptionsSchema = z
         .optional()
         .describe("AI image model when source is 'aiGenerated', e.g. 'flux-1-quick' (2 credits) or " +
         "'gpt-image-1-high' (120 credits). Omit to let Gamma choose."),
+    stylePreset: z
+        .enum(GAMMA_IMAGE_STYLE_PRESETS)
+        .optional()
+        .describe(`Art style preset (${GAMMA_IMAGE_STYLE_PRESETS.join(" | ")}). ` +
+        `Combined with 'style' if both are given. Use 'custom' to rely on 'style' alone.`),
     style: z
         .string()
         .max(5_000)
@@ -126,3 +131,31 @@ export const inputTextSchema = z
     .min(1)
     .max(400_000)
     .describe("Content to generate from: a topic, an outline, or a full draft. Max 400,000 characters.");
+/** One entry in a multi-page generation. */
+export const pageSchema = z.object({
+    inputText: inputTextSchema,
+    title: titleSchema.optional(),
+    path: z
+        .string()
+        .min(1)
+        .max(500)
+        .optional()
+        .describe("URL slug for this page, e.g. '/pricing'. Honored for pages after the first; " +
+        "the first page is the File's main page. Derived from the title when omitted."),
+    additionalInstructions: additionalInstructionsSchema.optional(),
+    textMode: z
+        .enum(GAMMA_TEXT_MODES)
+        .optional()
+        .describe(`How to treat this page's inputText (${GAMMA_TEXT_MODES.join(" | ")})`),
+    format: z
+        .enum(GAMMA_FORMATS)
+        .optional()
+        .describe(`Output type for this page (${GAMMA_FORMATS.join(" | ")})`),
+    numCards: z.number().int().min(1).max(75).optional().describe("Cards for this page"),
+    cardSplit: z
+        .enum(GAMMA_CARD_SPLIT)
+        .optional()
+        .describe(`How this page's content is divided (${GAMMA_CARD_SPLIT.join(" | ")})`),
+    textOptions: textOptionsSchema.optional(),
+    imageOptions: imageOptionsSchema.optional(),
+});

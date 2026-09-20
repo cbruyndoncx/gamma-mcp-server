@@ -26,7 +26,7 @@ const EXECUTIVE_IMAGES = {
 
 export function registerGenerateExecutivePresentationTool(server: McpServer): void {
   server.tool(
-    "generate-executive-presentation",
+    "generate_executive_presentation",
     "Generate an executive presentation: 16x9 PPTX, condensed text, photorealistic images, theme logo and card numbers in the footer.",
     {
       inputText: inputTextSchema.describe("Markdown slide outline for the executive presentation."),
@@ -87,7 +87,7 @@ export function estimateReportCards(contentText: string): number {
 
 export function registerGenerateExecutiveReportTool(server: McpServer): void {
   server.tool(
-    "generate-executive-report",
+    "generate_executive_report",
     "Generate a detailed executive report as an A4 PDF: preserves your exact text, detailed formatting, photorealistic images. Provide either inputText or filePath.",
     {
       inputText: inputTextSchema

@@ -214,19 +214,19 @@ rather than implying full-content reads.
 - [x] **1.5** `types.ts`: replace `GammaAPIResponse` with the real v1.0 shapes — `CreateGenerationResponse`, `GenerationStatusResponse`, `CreditsResponse`, `PageGenerationResult`, `ErrorResponse`, `ExportStatusResponse`, `ThemeItem`, `FolderItem`, and the analytics types.
 - [x] **1.6** Split `mcp-tools.ts` into `src/tools/` — `generation.ts`, `images.ts`, `workspace.ts`, `management.ts`, `analytics.ts`, `presets.ts`, with `registerAllTools` composing them.
 
-### Phase 2 — `generate` parity
+### Phase 2 — `generate` parity ✅ **COMPLETE 2026-09-20**
 
-- [ ] **2.1** Rename `generate-presentation` → `generate`.
-- [ ] **2.2** Add `title`, `sharingOptions`, `waitForCompletion`. *(§2.2, §3.2)*
-- [ ] **2.3** Add `imageOptions.stylePreset` mapped onto `style`. *(§3.3)*
+- [x] **2.1** Rename `generate-presentation` → `generate`.
+- [x] **2.2** Add `title`, `sharingOptions`, `waitForCompletion`. *(§2.2, §3.2)*
+- [x] **2.3** Add `imageOptions.stylePreset` mapped onto `style`. *(§3.3)*
 - [x] ~~**2.4** Register deprecated kebab-case aliases behind `GAMMA_LEGACY_TOOL_NAMES`.~~ **Dropped per Q2.**
 
-### Phase 3 — Remaining generation tools
+### Phase 3 — Remaining generation tools ✅ **COMPLETE 2026-09-20**
 
-- [ ] **3.1** `generate_multi_page_gamma` — `pages[]` 1–50, `publish`, file-level `title`/`themeId`/`folderIds`/`cardOptions`/`sharingOptions`/`exportAs`. Surface per-page results and `pageWarnings`.
-- [ ] **3.2** `generate_from_template` — `POST /generations/from-template`, required `gammaId` + `prompt`; optional `title`, `themeId`, `imageOptions{model,style}`, `sharingOptions`, `folderIds`, `exportAs`.
-- [ ] **3.3** `get_generation_status` — replaces `get-presentation-assets`. Returns `status`, `gammaUrl`, `exportUrl`, `gammaId`, `credits`, `pages[]`.
-- [ ] **3.4** `download_export` — the download behaviour split out of the old tool. ~~Move the target directory off hardcoded `/tmp` to a `GAMMA_DOWNLOAD_DIR` env var~~ *(done early in Phase 0)*.
+- [x] **3.1** `generate_multi_page_gamma` — `pages[]` 1–50, `publish`, file-level `title`/`themeId`/`folderIds`/`cardOptions`/`sharingOptions`/`exportAs`. Surface per-page results and `pageWarnings`.
+- [x] **3.2** `generate_from_template` — `POST /generations/from-template`, required `gammaId` + `prompt`; optional `title`, `themeId`, `imageOptions{model,style}`, `sharingOptions`, `folderIds`, `exportAs`.
+- [x] **3.3** `get_generation_status` — replaces `get-presentation-assets`. Returns `status`, `gammaUrl`, `exportUrl`, `gammaId`, `credits`, `pages[]`.
+- [x] **3.4** `download_export` — the download behaviour split out of the old tool. ~~Move the target directory off hardcoded `/tmp` to a `GAMMA_DOWNLOAD_DIR` env var~~ *(done early in Phase 0)*.
 
 ### Phase 4 — Workspace discovery
 
@@ -258,7 +258,7 @@ rather than implying full-content reads.
 
 ### Phase 8 — Prompts, docs, release
 
-- [ ] **8.1** Update all 11 `prompts/public/*.json` templates: `generate-presentation` → `generate`. Add `title` and `themeId` guidance where useful.
+- [x] **8.1** *(done with Phase 2)* Update all 11 `prompts/public/*.json` templates: `generate-presentation` → `generate`. Add `title` and `themeId` guidance where useful.
 - [ ] **8.2** Rewrite `docs/API_COVERAGE.md` and `docs/IMPLEMENTATION_STATUS.md` (both still dated 2025-01-17).
 - [ ] **8.3** Update `README.md` (tool list is 4 tools), `CONFIGURATION.md` (new env vars), `PROMPTS_GUIDE.md` (tool name in examples).
 - [ ] **8.4** Fix `CONTRIBUTING.md`, which wrongly calls `build/` git-ignored — it is committed and must be rebuilt with every `src` change.

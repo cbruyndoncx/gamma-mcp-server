@@ -19,7 +19,7 @@ const EXECUTIVE_IMAGES = {
     style: "photorealistic",
 };
 export function registerGenerateExecutivePresentationTool(server) {
-    server.tool("generate-executive-presentation", "Generate an executive presentation: 16x9 PPTX, condensed text, photorealistic images, theme logo and card numbers in the footer.", {
+    server.tool("generate_executive_presentation", "Generate an executive presentation: 16x9 PPTX, condensed text, photorealistic images, theme logo and card numbers in the footer.", {
         inputText: inputTextSchema.describe("Markdown slide outline for the executive presentation."),
         themeId: z
             .string()
@@ -68,7 +68,7 @@ export function estimateReportCards(contentText) {
     return Math.min(75, Math.max(1, estimated));
 }
 export function registerGenerateExecutiveReportTool(server) {
-    server.tool("generate-executive-report", "Generate a detailed executive report as an A4 PDF: preserves your exact text, detailed formatting, photorealistic images. Provide either inputText or filePath.", {
+    server.tool("generate_executive_report", "Generate a detailed executive report as an A4 PDF: preserves your exact text, detailed formatting, photorealistic images. Provide either inputText or filePath.", {
         inputText: inputTextSchema
             .optional()
             .describe("Report content, Markdown supported. Either this or filePath is required."),

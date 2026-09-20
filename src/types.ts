@@ -12,6 +12,7 @@ import type {
   GAMMA_HEADER_FOOTER_TYPES,
   GAMMA_HEADER_FOOTER_IMAGE_SOURCES,
   GAMMA_HEADER_FOOTER_SIZES,
+  GAMMA_IMAGE_STYLE_PRESETS,
   GAMMA_SHARING_WORKSPACE_ACCESS,
   GAMMA_SHARING_EXTERNAL_ACCESS,
   GAMMA_SHARING_EMAIL_ACCESS,
@@ -38,6 +39,13 @@ export interface GammaImageOptions {
   source?: GammaImageSource;
   model?: string;
   style?: string;
+}
+
+export type GammaImageStylePreset = (typeof GAMMA_IMAGE_STYLE_PRESETS)[number];
+
+/** What the tool layer accepts, before `stylePreset` is folded into `style`. */
+export interface GammaImageOptionsInput extends GammaImageOptions {
+  stylePreset?: GammaImageStylePreset;
 }
 
 export interface GammaHeaderFooterElement {
@@ -81,21 +89,83 @@ export interface GammaCardOptions {
 
 export interface GammaGenerationParams {
   inputText: string;
+  title?: string;
   format?: GammaFormat;
   textMode?: GammaTextMode;
   numCards?: number;
   exportAs?: GammaExportFormat;
   additionalInstructions?: string;
   textOptions?: GammaTextOptions;
-  imageOptions?: GammaImageOptions;
+  imageOptions?: GammaImageOptionsInput;
   cardOptions?: GammaCardOptions;
+  sharingOptions?: GammaSharingOptions;
   folderIds?: string[];
   cardSplit?: GammaCardSplit;
   themeId?: string;
 }
 
-export interface GammaAPIRequestBody {
+/** One page of a multi-page File. */
+export interface GammaPageParams {
   inputText: string;
+  title?: string;
+  /** URL slug within a published site. Honored for pages 2..N only. */
+  path?: string;
+  additionalInstructions?: string;
+  textMode?: GammaTextMode;
+  format?: GammaFormat;
+  numCards?: number;
+  cardSplit?: GammaCardSplit;
+  textOptions?: GammaTextOptions;
+  imageOptions?: GammaImageOptionsInput;
+}
+
+/**
+ * A multi-page File. `pages` takes precedence over the top-level per-page
+ * fields; file-level options still apply to every page.
+ */
+export interface GammaMultiPageParams {
+  pages: GammaPageParams[];
+  title?: string;
+  publish?: boolean;
+  themeId?: string;
+  folderIds?: string[];
+  cardOptions?: GammaCardOptions;
+  sharingOptions?: GammaSharingOptions;
+  exportAs?: GammaExportFormat;
+}
+
+/** POST /generations/from-template */
+export interface GammaFromTemplateParams {
+  gammaId: string;
+  prompt: string;
+  title?: string;
+  themeId?: string;
+  /** Templates accept only model and style, not source. */
+  imageOptions?: { model?: string; style?: string };
+  sharingOptions?: GammaSharingOptions;
+  folderIds?: string[];
+  exportAs?: GammaExportFormat;
+}
+
+export interface GammaPageRequestBody {
+  inputText: string;
+  title?: string;
+  path?: string;
+  additionalInstructions?: string;
+  textMode?: string;
+  format?: string;
+  numCards?: number;
+  cardSplit?: string;
+  textOptions?: GammaTextOptions;
+  imageOptions?: GammaImageOptions;
+}
+
+export interface GammaAPIRequestBody {
+  /** Required unless `pages` is supplied. */
+  inputText?: string;
+  pages?: GammaPageRequestBody[];
+  publish?: boolean;
+  title?: string;
   format?: string;
   textMode?: string;
   numCards?: number;
@@ -104,6 +174,7 @@ export interface GammaAPIRequestBody {
   textOptions?: GammaTextOptions;
   imageOptions?: GammaImageOptions;
   cardOptions?: GammaCardOptions;
+  sharingOptions?: GammaSharingOptions;
   folderIds?: string[];
   cardSplit?: string;
   themeId?: string;
@@ -161,6 +232,8 @@ export interface GammaGenerationStatusResponse {
 /** Normalized result this server hands back to its tools. */
 export interface GammaGenerationResult {
   url: string | null;
+  /** null when the request never reached the API. */
+  status: GammaGenerationStatus | null;
   generationId: string | null;
   gammaId: string | null;
   exportUrl: string | null;

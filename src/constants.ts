@@ -90,6 +90,22 @@ export const GAMMA_HEADER_FOOTER_IMAGE_SOURCES = ["themeLogo", "custom"] as cons
 export const GAMMA_HEADER_FOOTER_SIZES = ["sm", "md", "lg", "xl"] as const;
 
 /**
+ * Art style presets.
+ *
+ * Gamma's official MCP server exposes these as `imageOptions.stylePreset`, but
+ * the REST API has no such field - it is a convenience layer in their server.
+ * We match the interface and fold the preset into `imageOptions.style`.
+ */
+export const GAMMA_IMAGE_STYLE_PRESETS = [
+  "photorealistic",
+  "illustration",
+  "abstract",
+  "3D",
+  "lineArt",
+  "custom",
+] as const;
+
+/**
  * Sharing access levels. `fullAccess` is workspace-members-only.
  */
 export const GAMMA_SHARING_WORKSPACE_ACCESS = [

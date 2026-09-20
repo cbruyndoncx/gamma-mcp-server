@@ -14,6 +14,45 @@
   `typescript` / `@types/node` moved into `devDependencies` — `npm run build`
   previously failed on any clean clone.
 
+### Tool names now match Gamma's official MCP server
+
+Tools that do the same job as a tool on Gamma's official MCP server now carry the
+same name, so instructions written against that server work here unchanged.
+
+| Before | After |
+|---|---|
+| `generate-presentation` | `generate` |
+| `get-presentation-assets` | `get_generation_status` (+ `download_export`) |
+| `generate-executive-presentation` | `generate_executive_presentation` |
+| `generate-executive-report` | `generate_executive_report` |
+
+**This is a breaking change** and there is no alias layer — the old names are gone.
+All 11 templates in `prompts/public/` were updated; update your own MCP client
+configs and any `prompts/private/*.json` that name a tool.
+
+New tools:
+
+- **`generate_multi_page_gamma`** — one Gamma with up to 50 distinct pages under a
+  single URL, each with its own deep link, optionally published as a site.
+- **`generate_from_template`** — `POST /generations/from-template`, for adapting an
+  existing gamma.
+- **`download_export`** — split out of the old assets tool. Writes to
+  `GAMMA_DOWNLOAD_DIR`.
+
+New parameters on `generate`:
+
+- **`title`** (1–500) — set the title instead of having it inferred.
+- **`sharingOptions`** — `workspaceAccess`, `externalAccess`, and `emailOptions`
+  for sharing with named recipients.
+- **`imageOptions.stylePreset`** — `photorealistic`, `illustration`, `abstract`,
+  `3D`, `lineArt`, `custom`. The REST API has no such field; it is a convenience
+  layer in Gamma's own server, so we fold it into `style` (combining the two when
+  both are given rather than discarding either).
+- **`waitForCompletion`** — defaults to `true`, preserving the blocking behaviour.
+  Set `false` to get a `generationId` back immediately and poll
+  `get_generation_status` yourself, which matches the official server and avoids
+  client-side timeouts on long generations.
+
 ### Internal restructure
 
 - `gamma-api.ts` split into `src/api/client.ts` (auth, error mapping, retries,

@@ -8,6 +8,24 @@ import fetch from "node-fetch";
 import { GAMMA_API_CONFIG, GAMMA_API_DEFAULTS, GENERATION_STATUS, DOWNLOAD_PATH, } from "../constants.js";
 import { apiRequest, nextPollDelay, GammaApiError } from "./client.js";
 /**
+ * Fold `stylePreset` into `style`.
+ *
+ * `stylePreset` exists on Gamma's official MCP server but not in the REST API,
+ * so we resolve it here. When both are given they are combined, so neither is
+ * silently discarded.
+ */
+function resolveImageOptions(options) {
+    if (!options)
+        return undefined;
+    const { stylePreset, style, ...rest } = options;
+    const resolvedStyle = stylePreset && stylePreset !== "custom"
+        ? style
+            ? `${stylePreset}, ${style}`
+            : stylePreset
+        : style;
+    return resolvedStyle ? { ...rest, style: resolvedStyle } : { ...rest };
+}
+/**
  * Normalize parameters to the shape the Gamma API expects.
  */
 function normalizeRequestBody(params) {
@@ -16,6 +34,10 @@ function normalizeRequestBody(params) {
         format: params.format || GAMMA_API_DEFAULTS.FORMAT,
         textMode: params.textMode || GAMMA_API_DEFAULTS.TEXT_MODE,
     };
+    if (params.title)
+        body.title = params.title;
+    if (params.sharingOptions)
+        body.sharingOptions = params.sharingOptions;
     if (params.exportAs)
         body.exportAs = params.exportAs;
     if (typeof params.numCards === "number")
@@ -24,8 +46,9 @@ function normalizeRequestBody(params) {
         body.additionalInstructions = params.additionalInstructions;
     if (params.textOptions)
         body.textOptions = params.textOptions;
-    if (params.imageOptions)
-        body.imageOptions = params.imageOptions;
+    const imageOptions = resolveImageOptions(params.imageOptions);
+    if (imageOptions)
+        body.imageOptions = imageOptions;
     if (params.cardOptions)
         body.cardOptions = params.cardOptions;
     if (params.folderIds)
@@ -53,11 +76,89 @@ function collectWarnings(data) {
 export async function getGenerationStatus(generationId) {
     return apiRequest(`/generations/${generationId}`);
 }
+/**
+ * Build the request body for a multi-page File.
+ *
+ * `pages` takes precedence over the top-level per-page fields, so those are
+ * deliberately not set here; file-level options still apply to every page.
+ */
+function normalizeMultiPageBody(params) {
+    const body = {
+        pages: params.pages.map((page) => {
+            const out = { inputText: page.inputText };
+            if (page.title)
+                out.title = page.title;
+            if (page.path)
+                out.path = page.path;
+            if (page.additionalInstructions)
+                out.additionalInstructions = page.additionalInstructions;
+            if (page.textMode)
+                out.textMode = page.textMode;
+            if (page.format)
+                out.format = page.format;
+            if (typeof page.numCards === "number")
+                out.numCards = page.numCards;
+            if (page.cardSplit)
+                out.cardSplit = page.cardSplit;
+            if (page.textOptions)
+                out.textOptions = page.textOptions;
+            const img = resolveImageOptions(page.imageOptions);
+            if (img)
+                out.imageOptions = img;
+            return out;
+        }),
+    };
+    if (params.title)
+        body.title = params.title;
+    if (params.publish !== undefined)
+        body.publish = params.publish;
+    if (params.themeId)
+        body.themeId = params.themeId;
+    if (params.folderIds)
+        body.folderIds = params.folderIds;
+    if (params.cardOptions)
+        body.cardOptions = params.cardOptions;
+    if (params.sharingOptions)
+        body.sharingOptions = params.sharingOptions;
+    if (params.exportAs)
+        body.exportAs = params.exportAs;
+    return body;
+}
 /** POST /generations - returns a generationId; URLs come from polling. */
 export async function createGeneration(params) {
     return apiRequest("/generations", {
         method: "POST",
         body: normalizeRequestBody(params),
+    });
+}
+/** POST /generations with a `pages` array. */
+export async function createMultiPageGeneration(params) {
+    return apiRequest("/generations", {
+        method: "POST",
+        body: normalizeMultiPageBody(params),
+    });
+}
+/** POST /generations/from-template */
+export async function createFromTemplate(params) {
+    const body = {
+        gammaId: params.gammaId,
+        prompt: params.prompt,
+    };
+    if (params.title)
+        body.title = params.title;
+    if (params.themeId)
+        body.themeId = params.themeId;
+    if (params.imageOptions)
+        body.imageOptions = params.imageOptions;
+    if (params.sharingOptions)
+        body.sharingOptions = params.sharingOptions;
+    if (params.folderIds)
+        body.folderIds = params.folderIds;
+    if (params.exportAs)
+        body.exportAs = params.exportAs;
+    return apiRequest("/generations/from-template", {
+        method: "POST",
+        body,
     });
 }
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -72,6 +173,7 @@ export async function pollGenerationStatus(generationId, warnings = null) {
         if (data.status === GENERATION_STATUS.COMPLETED) {
             return {
                 url: data.gammaUrl ?? null,
+                status: data.status,
                 generationId,
                 gammaId: data.gammaId ?? null,
                 exportUrl: data.exportUrl ?? null,
@@ -85,6 +187,7 @@ export async function pollGenerationStatus(generationId, warnings = null) {
         if (data.status === GENERATION_STATUS.FAILED) {
             return {
                 url: null,
+                status: data.status,
                 generationId,
                 gammaId: data.gammaId ?? null,
                 exportUrl: null,
@@ -99,6 +202,7 @@ export async function pollGenerationStatus(generationId, warnings = null) {
     }
     return {
         url: null,
+        status: "pending",
         generationId,
         gammaId: null,
         exportUrl: null,
@@ -107,29 +211,58 @@ export async function pollGenerationStatus(generationId, warnings = null) {
         error: `Timed out after ${GAMMA_API_CONFIG.TIMEOUT_MS / 60_000} minutes waiting for generation ${generationId}.`,
     };
 }
-/**
- * Create a generation and wait for it to finish.
- */
-export async function generatePresentation(params) {
-    const failed = (error) => ({
+function failedResult(error) {
+    return {
         url: null,
+        status: null,
         generationId: null,
         gammaId: null,
         exportUrl: null,
         credits: null,
         warnings: null,
         error,
-    });
+    };
+}
+/**
+ * Run any of the three create endpoints, then either wait for the result or
+ * hand back the generationId.
+ */
+async function runGeneration(create, waitForCompletion) {
     try {
-        const createData = await createGeneration(params);
+        const createData = await create();
         if (!createData.generationId) {
-            return failed(`The API accepted the request but returned no generationId: ${JSON.stringify(createData)}`);
+            return failedResult(`The API accepted the request but returned no generationId: ${JSON.stringify(createData)}`);
         }
-        return await pollGenerationStatus(createData.generationId, collectWarnings(createData));
+        const warnings = collectWarnings(createData);
+        if (!waitForCompletion) {
+            return {
+                url: null,
+                status: "pending",
+                generationId: createData.generationId,
+                gammaId: null,
+                exportUrl: null,
+                credits: null,
+                warnings,
+                error: null,
+            };
+        }
+        return await pollGenerationStatus(createData.generationId, warnings);
     }
     catch (err) {
-        return failed(err instanceof GammaApiError ? err.message : err?.message || String(err));
+        return failedResult(err instanceof GammaApiError ? err.message : err?.message || String(err));
     }
+}
+/** Create a single-page generation and, by default, wait for it. */
+export async function generatePresentation(params, waitForCompletion = true) {
+    return runGeneration(() => createGeneration(params), waitForCompletion);
+}
+/** Create a multi-page File and, by default, wait for it. */
+export async function generateMultiPage(params, waitForCompletion = true) {
+    return runGeneration(() => createMultiPageGeneration(params), waitForCompletion);
+}
+/** Create a gamma from a template and, by default, wait for it. */
+export async function generateFromTemplate(params, waitForCompletion = true) {
+    return runGeneration(() => createFromTemplate(params), waitForCompletion);
 }
 /**
  * Fetch a generation's assets.
