@@ -147,6 +147,8 @@ Generation tools block until the result is ready by default. Pass `waitForComple
 
 For detailed information, see:
 
+- **[MIGRATION.md](MIGRATION.md)** - Upgrading from the pre-v1.0 tool names (breaking)
+
 - **[NPX_USAGE.md](NPX_USAGE.md)** - Complete NPX usage guide and FAQs
 - **[CONFIGURATION.md](CONFIGURATION.md)** - All configuration options and examples
 - **[PROMPTS_GUIDE.md](PROMPTS_GUIDE.md)** - How to create custom prompt templates
