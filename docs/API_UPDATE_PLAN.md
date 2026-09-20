@@ -228,11 +228,11 @@ rather than implying full-content reads.
 - [x] **3.3** `get_generation_status` — replaces `get-presentation-assets`. Returns `status`, `gammaUrl`, `exportUrl`, `gammaId`, `credits`, `pages[]`.
 - [x] **3.4** `download_export` — the download behaviour split out of the old tool. ~~Move the target directory off hardcoded `/tmp` to a `GAMMA_DOWNLOAD_DIR` env var~~ *(done early in Phase 0)*.
 
-### Phase 4 — Workspace discovery
+### Phase 4 — Workspace discovery ✅ **COMPLETE 2026-09-20**
 
-- [ ] **4.1** `get_themes` — `GET /themes`, params `query`/`limit`/`after`/`type`. Returns `id`, `name`, `type`, `colorKeywords`, `toneKeywords`.
-- [ ] **4.2** `get_folders` — `GET /folders`, params `query`/`limit`/`after`.
-- [ ] **4.3** Remove the hardcoded workspace theme ID from the `generate-executive-presentation` comment now that themes are discoverable.
+- [x] **4.1** `get_themes` — `GET /themes`, params `query`/`limit`/`after`/`type`. Returns `id`, `name`, `type`, `colorKeywords`, `toneKeywords`.
+- [x] **4.2** `get_folders` — `GET /folders`, params `query`/`limit`/`after`.
+- [x] **4.3** Remove the hardcoded workspace theme ID from the `generate-executive-presentation` comment now that themes are discoverable.
 
 ### Phase 5 — Images
 

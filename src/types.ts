@@ -259,3 +259,28 @@ export interface GammaAssets {
   credits?: GammaCredits;
   download?: GammaAssetDownloads;
 }
+
+/**
+ * Cursor-paginated list envelope. The API returns the items under `data`;
+ * the tool layer renames it to something meaningful per endpoint.
+ */
+export interface GammaListResponse<T> {
+  data: T[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
+export type GammaThemeType = "standard" | "custom";
+
+export interface GammaThemeItem {
+  id: string;
+  name: string;
+  type: GammaThemeType;
+  colorKeywords?: string[];
+  toneKeywords?: string[];
+}
+
+export interface GammaFolderItem {
+  id: string;
+  name: string;
+}

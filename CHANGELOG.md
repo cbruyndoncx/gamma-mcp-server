@@ -53,6 +53,14 @@ New parameters on `generate`:
   `get_generation_status` yourself, which matches the official server and avoids
   client-side timeouts on long generations.
 
+### Workspace discovery
+
+- **`get_themes`** and **`get_folders`** — look a theme or folder up by name
+  instead of copying its ID out of the Gamma app. Both support the REST
+  endpoint's cursor pagination; `get_themes` also filters to `standard` or
+  `custom`. Parameter names follow the official server (`name` for the search
+  term).
+
 ### Internal restructure
 
 - `gamma-api.ts` split into `src/api/client.ts` (auth, error mapping, retries,

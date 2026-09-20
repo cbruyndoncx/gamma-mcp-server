@@ -18,6 +18,7 @@ import {
   registerGetGenerationStatusTool,
   registerDownloadExportTool,
 } from "./status.js";
+import { registerGetThemesTool, registerGetFoldersTool } from "./workspace.js";
 
 export function registerAllTools(server: McpServer): void {
   // Generation
@@ -28,6 +29,10 @@ export function registerAllTools(server: McpServer): void {
   // Status and exports
   registerGetGenerationStatusTool(server);
   registerDownloadExportTool(server);
+
+  // Workspace discovery
+  registerGetThemesTool(server);
+  registerGetFoldersTool(server);
 
   // Presets - this server's own additions, beyond official parity
   registerGenerateExecutivePresentationTool(server);
