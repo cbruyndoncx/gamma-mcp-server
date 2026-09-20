@@ -89,35 +89,68 @@ grep -l 'generate-presentation\|get-presentation-assets\|generate-executive-\|un
 
 ### Apply the renames
 
-```bash
-# Tool names
-sed -i 's/generate-presentation/generate/g' *.json
-sed -i 's/generate-executive-presentation/generate_executive_presentation/g' *.json
-sed -i 's/generate-executive-report/generate_executive_report/g' *.json
-sed -i 's/get-presentation-assets/get_generation_status/g' *.json
+Use the bundled script. It works the same on macOS and Linux — unlike `sed -i`,
+which differs between the BSD and GNU versions and will either fail or create
+stray backup files depending on which you have.
 
-# Removed API value
-sed -i 's/"unsplash"/"pexels"/g; s/\bunsplash\b/pexels/g' *.json
+```bash
+# From a clone of this repo:
+node scripts/migrate-prompts.mjs --dry-run "$GAMMA_PROMPTS_PRIVATE_DIR"
 ```
 
-> **Order matters.** Run the `generate-executive-*` lines *before* the plain
-> `generate-presentation` line if you reorder them — otherwise
-> `generate-executive-presentation` gets partially rewritten. As listed above the
-> first command is safe because `generate-executive-presentation` does not contain
-> the substring `generate-presentation`.
+It prints what it would change, per file:
 
-### Verify the JSON still parses
+```
+would change board-meeting.json: generate-presentation -> generate (1x), unsplash -> pexels (1x)
+  client-review.json: no change
+
+Would update 1 of 2 file(s). Re-run without --dry-run to apply.
+```
+
+If that looks right, apply it:
+
+```bash
+node scripts/migrate-prompts.mjs "$GAMMA_PROMPTS_PRIVATE_DIR"
+```
+
+Each modified file is copied to `<name>.json.bak` first, and the script refuses to
+write a file whose rewritten form would not parse as JSON.
+
+### Check nothing was missed
+
+```bash
+cd "$GAMMA_PROMPTS_PRIVATE_DIR"
+grep -n 'generate-presentation\|get-presentation-assets\|generate-executive-\|unsplash' *.json
+# expect: no output
+```
+
+Once you are satisfied, remove the backups:
+
+```bash
+rm -f "$GAMMA_PROMPTS_PRIVATE_DIR"/*.json.bak
+```
+
+<details>
+<summary>Doing it by hand instead</summary>
+
+The five substitutions are independent — none is a substring of another, so order
+does not matter:
+
+| Find | Replace |
+|---|---|
+| `generate-executive-presentation` | `generate_executive_presentation` |
+| `generate-executive-report` | `generate_executive_report` |
+| `generate-presentation` | `generate` |
+| `get-presentation-assets` | `get_generation_status` |
+| `unsplash` | `pexels` |
+
+Then confirm each file still parses:
 
 ```bash
 for f in *.json; do python3 -c "import json;json.load(open('$f'))" || echo "INVALID: $f"; done
 ```
 
-### Check nothing was missed
-
-```bash
-grep -n 'generate-presentation\|get-presentation-assets\|generate-executive-\|unsplash' *.json
-# expect: no output
-```
+</details>
 
 ---
 
