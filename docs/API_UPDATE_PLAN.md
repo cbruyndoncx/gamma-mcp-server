@@ -256,13 +256,13 @@ rather than implying full-content reads.
 - [x] **7.4** `get_gamma_viewer_detail_analytics` — per-viewer `perCardTimeSpent`.
 - [x] **7.5** Shared: all four need ≥edit permission and return 403 otherwise; data lags ~1 hour. Say both in the tool descriptions.
 
-### Phase 8 — Prompts, docs, release
+### Phase 8 — Prompts, docs, release ✅ **COMPLETE 2026-09-20** (8.6b outstanding)
 
 - [x] **8.1** *(done with Phase 2)* Update all 11 `prompts/public/*.json` templates: `generate-presentation` → `generate`. Add `title` and `themeId` guidance where useful.
-- [ ] **8.2** Rewrite `docs/API_COVERAGE.md` and `docs/IMPLEMENTATION_STATUS.md` (both still dated 2025-01-17).
-- [ ] **8.3** Update `README.md` (tool list is 4 tools), `CONFIGURATION.md` (new env vars), `PROMPTS_GUIDE.md` (tool name in examples).
-- [ ] **8.4** Fix `CONTRIBUTING.md`, which wrongly calls `build/` git-ignored — it is committed and must be rebuilt with every `src` change.
-- [ ] **8.5** `CHANGELOG.md` entry covering the rename, the `unsplash` removal, and the new tools.
+- [x] **8.2** Rewrite `docs/API_COVERAGE.md` and `docs/IMPLEMENTATION_STATUS.md` (both still dated 2025-01-17).
+- [x] **8.3** Update `README.md` (tool list is 4 tools), `CONFIGURATION.md` (new env vars), `PROMPTS_GUIDE.md` (tool name in examples).
+- [x] **8.4** Fix `CONTRIBUTING.md`, which wrongly calls `build/` git-ignored — it is committed and must be rebuilt with every `src` change.
+- [x] **8.5** `CHANGELOG.md` entry covering the rename, the `unsplash` removal, and the new tools.
 - [x] **8.6a** ~~Add `version` and `description` to `package.json`~~ and `typescript`/`@types/node` to `devDependencies`. *Done 2026-09-20 alongside the project rename.*
 - [ ] **8.6b** Keep the version in `src/index.ts` in step with `package.json` on release (currently both `1.0.0`); consider reading it from the manifest rather than hardcoding.
 

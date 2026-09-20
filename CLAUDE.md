@@ -29,41 +29,55 @@ the established pattern.
 
 ## Architecture
 
-An MCP stdio server that wraps the Gamma generation API (https://gamma.app).
+An MCP stdio server wrapping the Gamma v1.0 API (https://developers.gamma.app).
 
-`src/index.ts` creates an `McpServer`, calls `registerAllTools` then `registerAllPrompts`,
-and connects a `StdioServerTransport`. **All logging goes to `console.error`** — stdout is
-the MCP protocol channel.
+`src/index.ts` creates an `McpServer`, calls `registerAllTools` then
+`registerAllPrompts`, and connects a `StdioServerTransport`. **All logging goes to
+`console.error`** — stdout is the MCP protocol channel.
 
 Two independent halves:
 
-**Tools** (`src/mcp-tools.ts` → `src/gamma-api.ts`). Four tools, hardcoded in TypeScript:
-- `generate-presentation` — full passthrough; every Gamma parameter exposed as a Zod schema
-- `generate-executive-presentation` — 16x9 PPTX preset (condense/medium/photorealistic, theme-logo footer)
-- `generate-executive-report` — A4 PDF preset (preserve/detailed); accepts `inputText` or `filePath`, and derives `numCards` from content length (~1000 chars/page; Gamma accepts 1–15 then multiples of 5 up to 60)
-- `get-presentation-assets` — resolve/download PDF & PPTX for a `generationId` (downloads land in `/tmp`, see `DOWNLOAD_PATH`)
+**Tools** (`src/tools/*` → `src/api/*`). Hardcoded in TypeScript. Tool names match
+[Gamma's official MCP server](https://developers.gamma.app/mcp/mcp-tools-reference)
+wherever the job is the same — `node scripts/parity-check.mjs` asserts all 17 are
+present. Six more go beyond it: `download_export`, `archive_image`,
+`archive_gamma`, `delete_gamma`, and the two executive presets.
 
-`gamma-api.ts` does create → poll (30s interval, 10min ceiling) → extract URL. The Gamma API
-response shape is inconsistent, so `extractUrl`/`extractGenerationId` probe many aliases
-(`gammaUrl`/`url`/`exportUrl`/`outputs[]`/`exports[]`/…). When the API surfaces a new field
-name, add it to `GammaAPIResponse` in `types.ts` and to those extractors — not to callers.
+Every request goes through `src/api/client.ts`, which owns authentication, query
+building, error mapping (each status code gets an actionable hint), retries with
+backoff for 429/5xx, and rate-limit accounting. `nextPollDelay` reads
+`x-ratelimit-remaining-burst` and slows polling *before* a 429 rather than after.
+New endpoints belong in an `src/api/*` module calling `apiRequest`, never calling
+`fetch` directly — the one deliberate exception is the export download in
+`generations.ts`, since a pre-signed export URL must not carry the API key.
 
-**Prompts** (`src/mcp-prompts.ts` → `src/prompt-loader.ts`). Zero prompts live in code. The
-loader reads `*.json` from the public dir then the private dir (private wins on name
-collision), converts each `parameters` entry into a Zod schema, and registers a prompt that
-renders `template` with `{{param}}` / `{{param || "default"}}` substitution. With hot-reload
-on (default), `fs.watch` on both dirs triggers a debounced re-register — so editing a prompt
-JSON needs no rebuild or restart, while editing a tool does.
+Generation is async: POST returns only a `generationId`, and `gammaUrl`,
+`exportUrl` and `credits` come from polling `GET /generations/{id}`. Tools block
+by default; `waitForCompletion: false` returns the ID immediately.
 
-To add or change a prompt, edit `prompts/public/*.json`; never reintroduce hardcoded prompts
-into `mcp-prompts.ts`. `prompts/private/` is git-ignored. `package.json`'s `files` ships only
-`build` and `prompts/public`.
+**Prompts** (`src/mcp-prompts.ts` → `src/prompt-loader.ts`). Zero prompts live in
+code. The loader reads `*.json` from the public dir then the private dir (private
+wins on name collision), converts each `parameters` entry into a Zod schema, and
+renders `template` with `{{param}}` / `{{param || "default"}}` substitution. With
+hot-reload on (default), `fs.watch` triggers a debounced re-register — so editing
+a prompt JSON needs no rebuild or restart, while editing a tool does.
 
-`src/constants.ts` is the single source of truth for Gamma enums (text modes, formats, image
-sources, card dimensions, header/footer types & positions, sizes) and for env-var-backed
-config. `mcp-tools.ts` builds its Zod `.enum()`s and description strings from those arrays,
-and `types.ts` derives its union types from them — so adding a Gamma option is a one-line
-edit in `constants.ts`.
+Prompt templates name tools as free text, which is **not** validated against
+registered tools. Renaming a tool silently breaks any template that mentions it;
+grep `prompts/` when you do.
+
+**Single sources of truth.** `src/constants.ts` holds every Gamma enum and the
+env-var config; `src/types.ts` derives its union types from those arrays. Adding
+a Gamma option is a one-line edit there. `src/schemas.ts` holds the shared Zod
+fragments (`headerFooterElementSchema`, `textOptionsSchema`, `sharingOptionsSchema`,
+`pageSchema`, …) — build tool inputs from these rather than inlining, which is how
+the header/footer schema ended up copy-pasted six times before.
+
+**Two things the API returns that are easy to drop:** `warnings` (how Gamma reports
+a parameter it silently ignored — e.g. `dimensions` invalid for the chosen
+`format`) and `credits`. `src/tools/format.ts` renders both; keep it that way.
+
+**Export URLs are unauthenticated** and expire in about a week. Never log one.
 
 ## Environment variables
 
